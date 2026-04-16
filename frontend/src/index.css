@@ -1,0 +1,62 @@
+:root {
+  --color-blue: #1A4BFF;        
+  --color-dark: #0D1117;        
+  --color-white: #FFFFFF;
+  --color-gray-light: #F5F5F5;  
+  --color-text: #111111;        
+  --color-text-muted: rgba(255,255,255,0.6); 
+  --font-sans: 'DM Sans', sans-serif;
+  --font-serif: 'Libre Baskerville', serif;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  color: var(--color-text);
+  background-color: var(--color-gray-light);
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+ul {
+  list-style: none;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+  font-family: inherit;
+  transition: all 0.3s ease;
+}
+
+a,
+input,
+select,
+textarea {
+  transition: all 0.3s ease;
+}
+
+.fade-in-up {
+  opacity: 0;
+  transform: translateY(24px);
+  filter: blur(1px);
+  transition: opacity 0.65s cubic-bezier(0.22, 1, 0.36, 1), transform 0.65s cubic-bezier(0.22, 1, 0.36, 1), filter 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.fade-in-up.visible {
+  opacity: 1;
+  transform: translateY(0);
+  filter: blur(0);
+}

@@ -1,0 +1,132 @@
+.navbar-shell {
+  position: fixed;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(1320px, calc(100% - 32px));
+  border-radius: 999px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background-color: rgba(255, 255, 255, 0.94);
+  z-index: 100;
+  transition: all 0.3s ease;
+}
+
+.navbar-shell.scrolled {
+  background-color: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(9px);
+  -webkit-backdrop-filter: blur(9px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+}
+
+.navbar {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 1.2rem;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.logo span {
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--color-text);
+}
+
+.nav-links {
+  display: flex;
+  gap: 2.2rem;
+  list-style: none;
+  align-items: center;
+}
+
+.nav-links a {
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text);
+  letter-spacing: 0.2px;
+  display: flex;
+  align-items: center;
+  transition: all 0.3s ease;
+}
+
+.nav-links a.active {
+  font-weight: 700;
+}
+
+.dropdown-icon {
+  margin-left: 4px;
+}
+
+.contact-btn {
+  background-color: var(--color-blue);
+  min-width: 116px;
+  height: 34px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-white);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 0 14px;
+}
+
+.contact-btn:hover {
+  transform: translateY(-1px);
+  background-color: #123acc;
+}
+
+.dropdown {
+  position: relative;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 150%;
+  left: 0;
+  min-width: 180px;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: var(--color-white);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(6px);
+  transition: all 0.3s ease;
+}
+
+.dropdown:hover .dropdown-menu {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.dropdown-menu a {
+  padding: 10px 12px;
+  font-size: 13px;
+}
+
+.dropdown-menu a:hover {
+  background: #f5f7ff;
+}
+
+@media (max-width: 980px) {
+  .nav-links {
+    gap: 1rem;
+  }
+  .logo span {
+    font-size: 24px;
+  }
+}

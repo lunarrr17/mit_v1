@@ -1,0 +1,132 @@
+.team-section {
+  background-color: var(--color-white);
+  padding: 8rem 2.5rem;
+}
+
+.team-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.team-header {
+  font-family: var(--font-sans);
+  font-size: clamp(2.5rem, 6vw, 48px);
+  font-weight: 700;
+  color: var(--color-text);
+  text-align: center;
+  margin-bottom: 4rem;
+}
+
+.filter-row {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 4rem;
+}
+
+.filter-btn {
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: var(--color-text);
+  padding: 0.75rem 1.5rem;
+  border-radius: 50px;
+  transition: all 0.3s ease;
+}
+
+.filter-btn:not(.active):hover {
+  background-color: var(--color-gray-light);
+}
+
+.filter-btn.active {
+  background-color: var(--color-blue);
+  color: var(--color-white);
+}
+
+.core-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-sans);
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: var(--color-text);
+  margin-bottom: 2rem;
+}
+
+.core-label .dot {
+  width: 8px;
+  height: 8px;
+  background-color: var(--color-text);
+  border-radius: 50%;
+}
+
+.team-list {
+  display: flex;
+  flex-direction: column;
+  transition: opacity 0.3s ease;
+}
+
+.team-list.fade-out {
+  opacity: 0;
+}
+
+.team-list.fade-in {
+  opacity: 1;
+}
+
+.team-member-row {
+  position: relative;
+  padding: 2rem 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: background-color 0.3s ease, padding-left 0.3s ease;
+  cursor: pointer;
+}
+
+.team-member-row:first-child {
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.member-name {
+  font-family: var(--font-serif);
+  font-size: clamp(2.5rem, 5vw, 64px);
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 0;
+  transition: color 0.3s ease;
+}
+
+.team-member-row:hover {
+  background-color: var(--color-gray-light);
+  padding-left: 1rem;
+}
+
+.team-member-row:hover .member-name {
+  color: var(--color-blue);
+}
+
+.member-thumbnail {
+  position: absolute;
+  right: 2rem;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background-image: url('/portrait_doctor.png');
+  background-size: cover;
+  background-position: center;
+  opacity: 0;
+  transform: translateX(20px);
+  transition: all 0.3s ease;
+  pointer-events: none;
+}
+
+.team-member-row:hover .member-thumbnail {
+  opacity: 1;
+  transform: translateX(0);
+}
