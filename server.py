@@ -104,6 +104,8 @@ def get_gradcam_base64(img_bgr, heatmap, alpha=0.4):
 
 @app.route('/predict', methods=['POST'])
 def predict():
+    print("[DEBUG] Issue 2: Predict endpoint reached")
+    print(f"[DEBUG] Issue 2: Request Payload (Files): {request.files}")
     probs, details = [], []
     for view in ['face','front','back']:
         if view not in request.files: continue
@@ -288,4 +290,4 @@ def health():
     return jsonify({'status': 'ok'})
 
 if __name__ == '__main__':
-    app.run(port=5000, debug=False)
+    app.run(host='0.0.0.0',port=5000,debug=False)

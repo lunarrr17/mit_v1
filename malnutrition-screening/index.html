@@ -1,672 +1,292 @@
-
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+  <!-- ADD THESE 2 LINES FIRST -->
+  <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+  <script>eruda.init();</script>
+
+  <!-- rest of your existing head content below -->
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Asklepios Healthcare AI</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800&family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet" />
-  <style>
-    :root {
-      --color-blue: #1A4BFF;
-      --color-dark: #0D1117;
-      --color-white: #FFFFFF;
-      --color-gray-light: #F5F5F5;
-      --color-text: #111111;
-      --color-text-muted: rgba(255,255,255,0.6);
-    }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: "DM Sans", sans-serif;
-      color: var(--color-text);
-      background: var(--color-white);
-      line-height: 1.4;
-    }
-    a, button, .team-row, .filter-tab {
-      transition: all 0.3s ease;
-    }
-    .container {
-      width: min(1180px, 92vw);
-      margin: 0 auto;
-    }
-    .plus-icon {
-      width: 20px;
-      height: 20px;
-      position: relative;
-      display: inline-block;
-    }
-    .plus-icon::before,
-    .plus-icon::after {
-      content: "";
-      position: absolute;
-      background: currentColor;
-      border-radius: 1px;
-    }
-    .plus-icon::before { width: 100%; height: 2.2px; top: 8.9px; left: 0; }
-    .plus-icon::after { width: 2.2px; height: 100%; top: 0; left: 8.9px; }
-
-    .top-nav-wrap {
-      position: sticky;
-      top: 0;
-      z-index: 999;
-      background: rgba(255,255,255,0.96);
-      border-bottom: 1px solid rgba(0,0,0,0.04);
-      transition: all 0.3s ease;
-    }
-    .top-nav-wrap.scrolled {
-      background: rgba(255,255,255,0.82);
-      backdrop-filter: blur(10px);
-      box-shadow: 0 8px 24px rgba(17,17,17,0.06);
-    }
-    .top-nav {
-      height: 78px;
-      display: grid;
-      grid-template-columns: auto 1fr auto;
-      align-items: center;
-      gap: 28px;
-    }
-    .logo-mark {
-      display: inline-grid;
-      place-items: center;
-      width: 36px;
-      height: 36px;
-      color: #000;
-    }
-    .nav-links {
-      display: flex;
-      justify-content: center;
-      gap: 28px;
-      align-items: center;
-      list-style: none;
-      padding: 0;
-      margin: 0;
-      font-size: 14px;
-      font-weight: 500;
-    }
-    .nav-links a { color: #111; text-decoration: none; }
-    .nav-links a.active { font-weight: 700; }
-    .nav-links .arrow { margin-left: 4px; font-size: 11px; vertical-align: middle; }
-    .nav-right {
-      display: flex;
-      align-items: center;
-      gap: 18px;
-      font-size: 14px;
-      font-weight: 500;
-    }
-    .nav-right a { color: #111; text-decoration: none; }
-    .square-plus-btn {
-      width: 36px;
-      height: 36px;
-      border-radius: 8px;
-      border: none;
-      background: var(--color-blue);
-      color: #fff;
-      display: inline-grid;
-      place-items: center;
-      cursor: pointer;
-    }
-
-    .hero {
-      background: var(--color-gray-light);
-      min-height: 84vh;
-      position: relative;
-      overflow: hidden;
-      display: grid;
-      align-items: center;
-      padding: 68px 0 56px;
-    }
-    .hero-rings {
-      position: absolute;
-      inset: 50% auto auto 50%;
-      transform: translate(-50%, -50%);
-      width: min(860px, 90vw);
-      aspect-ratio: 1/1;
-      border-radius: 50%;
-      pointer-events: none;
-      background:
-        radial-gradient(circle at center, rgba(26,75,255,0.11) 0 17%, rgba(26,75,255,0.00) 19%),
-        radial-gradient(circle at center, rgba(122,153,255,0.22) 25%, rgba(122,153,255,0.00) 29%),
-        radial-gradient(circle at center, rgba(122,153,255,0.18) 37%, rgba(122,153,255,0.00) 42%),
-        radial-gradient(circle at center, rgba(122,153,255,0.14) 49%, rgba(122,153,255,0.00) 56%),
-        radial-gradient(circle at center, rgba(122,153,255,0.10) 62%, rgba(122,153,255,0.00) 69%);
-      animation: pulseRings 8s ease-in-out infinite;
-    }
-    @keyframes pulseRings {
-      0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.9; }
-      50% { transform: translate(-50%, -50%) scale(1.05); opacity: 0.7; }
-    }
-    .hero-logo-float {
-      position: absolute;
-      top: 24px;
-      left: 24px;
-      color: #111;
-    }
-    .hero-title-wrap {
-      position: relative;
-      z-index: 2;
-      text-align: center;
-    }
-    .hero-line-1 {
-      font-family: "Libre Baskerville", serif;
-      font-size: clamp(56px, 8vw, 92px);
-      margin: 0;
-      color: #1A1A1A;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-    }
-    .hero-line-2 {
-      font-family: "Libre Baskerville", serif;
-      font-size: clamp(66px, 9vw, 108px);
-      margin: -8px 0 0;
-      color: #1A1A1A;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      text-align: right;
-      max-width: 780px;
-      margin-left: auto;
-      margin-right: auto;
-      transform: translateX(4.5vw);
-    }
-    .hero-bottom-right {
-      position: absolute;
-      right: 4vw;
-      bottom: 38px;
-      z-index: 2;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    .hero-bottom-right a {
-      color: #111;
-      text-decoration: none;
-      font-weight: 500;
-      font-size: 15px;
-    }
-
-    .values {
-      background: var(--color-dark);
-      min-height: 50vh;
-      position: relative;
-      overflow: hidden;
-      padding: 80px 0 88px;
-    }
-    .values-layout {
-      position: relative;
-      min-height: 320px;
-    }
-    .value-card {
-      max-width: 430px;
-      background: rgba(255,255,255,0.04);
-      box-shadow: 0 16px 34px rgba(0,0,0,0.35);
-      border-radius: 16px;
-      padding: 24px;
-      position: absolute;
-    }
-    .value-card.one { left: 4%; top: 6px; }
-    .value-card.two { left: 36%; top: 96px; }
-    .l-bracket {
-      width: 14px;
-      height: 14px;
-      border-left: 2px solid #8CB2FF;
-      border-top: 2px solid #8CB2FF;
-      margin-bottom: 14px;
-    }
-    .value-card h3 {
-      margin: 0 0 8px;
-      color: var(--color-white);
-      font-size: 22px;
-      font-weight: 500;
-    }
-    .value-card p {
-      margin: 0;
-      font-size: 14px;
-      color: var(--color-text-muted);
-      max-width: 95%;
-    }
-    .join-row {
-      margin-top: 270px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      color: var(--color-text-muted);
-      font-size: 12px;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-    }
-    .blue-peek {
-      height: 76px;
-      background: var(--color-blue);
-    }
-
-    .timeline {
-      background: var(--color-blue);
-      color: #fff;
-      padding: 74px 0 88px;
-    }
-    .timeline-intro {
-      font-style: italic;
-      text-align: right;
-      color: rgba(255,255,255,0.86);
-      margin-bottom: 30px;
-    }
-    .timeline-list {
-      max-width: 920px;
-    }
-    .timeline-row {
-      border-top: 1px solid rgba(255,255,255,0.4);
-      padding: 24px 0 26px;
-      display: grid;
-      grid-template-columns: 34px 180px 1fr;
-      gap: 16px;
-      align-items: start;
-    }
-    .timeline-row:last-child {
-      border-bottom: 1px solid rgba(255,255,255,0.4);
-    }
-    .timeline-year {
-      margin: 0;
-      font-size: clamp(30px, 4.2vw, 40px);
-      font-weight: 700;
-      line-height: 1;
-    }
-    .timeline-desc {
-      margin: 4px 0 0;
-      color: rgba(255,255,255,0.86);
-      font-size: 15px;
-      max-width: 670px;
-    }
-    .timeline .plus-icon {
-      width: 16px;
-      height: 16px;
-      color: #fff;
-      margin-top: 8px;
-    }
-    .timeline .plus-icon::before { height: 2px; top: 7px; }
-    .timeline .plus-icon::after { width: 2px; left: 7px; }
-
-    .collage {
-      background: #fff;
-      padding: 82px 0 84px;
-    }
-    .mosaic-wrap {
-      position: relative;
-      min-height: 390px;
-      margin-bottom: 52px;
-    }
-    .img-landscape {
-      width: 76%;
-      max-width: 860px;
-      height: 280px;
-      object-fit: cover;
-      border-radius: 14px;
-      display: block;
-      box-shadow: 0 20px 45px rgba(0,0,0,0.12);
-    }
-    .img-portrait {
-      width: 300px;
-      height: 360px;
-      object-fit: cover;
-      border-radius: 14px;
-      position: absolute;
-      right: 8%;
-      top: 72px;
-      box-shadow: 0 20px 45px rgba(0,0,0,0.12);
-    }
-    .blue-accent-block {
-      width: 100px;
-      height: 100px;
-      background: var(--color-blue);
-      position: absolute;
-      right: 4%;
-      top: 330px;
-      border-radius: 8px;
-    }
-    .caption {
-      margin-top: 8px;
-      font-size: 11px;
-      color: #777;
-      letter-spacing: 0.03em;
-    }
-    .cap-portrait {
-      position: absolute;
-      right: 8%;
-      top: 442px;
-    }
-    .vision-row {
-      display: grid;
-      grid-template-columns: 32px 1fr;
-      gap: 14px;
-      align-items: start;
-      max-width: 900px;
-    }
-    .vision-row .plus-icon {
-      color: var(--color-blue);
-      margin-top: 9px;
-    }
-    .vision-text {
-      margin: 0;
-      font-family: "Libre Baskerville", serif;
-      font-size: clamp(30px, 4vw, 42px);
-      font-weight: 700;
-      line-height: 1.2;
-      letter-spacing: -0.01em;
-      color: #151515;
-    }
-
-    .team {
-      background: #fff;
-      padding: 76px 0 100px;
-    }
-    .team h2 {
-      margin: 0;
-      text-align: center;
-      font-size: clamp(38px, 6vw, 54px);
-      font-weight: 800;
-      letter-spacing: -0.02em;
-    }
-    .filters {
-      display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
-      gap: 12px;
-      margin: 28px auto 24px;
-    }
-    .filter-tab {
-      border: 1px solid rgba(0,0,0,0.12);
-      background: #fff;
-      color: #222;
-      border-radius: 999px;
-      padding: 9px 16px;
-      font-size: 12px;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      font-weight: 600;
-      cursor: pointer;
-    }
-    .filter-tab.active {
-      background: var(--color-blue);
-      border-color: var(--color-blue);
-      color: #fff;
-    }
-    .core-label {
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.16em;
-      color: #4f4f4f;
-      margin: 12px 0 14px;
-    }
-    .team-list {
-      position: relative;
-      max-width: 1060px;
-      margin: 0 auto;
-    }
-    .team-row {
-      position: relative;
-      border-bottom: 1px solid rgba(17,17,17,0.12);
-      padding: 12px 0;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 24px;
-      min-height: 88px;
-      cursor: pointer;
-      background: transparent;
-    }
-    .team-row:hover { background: #f7f9ff; }
-    .team-name {
-      margin: 0;
-      font-family: "Libre Baskerville", serif;
-      font-size: clamp(34px, 5vw, 64px);
-      font-weight: 700;
-      letter-spacing: -0.01em;
-      color: #161616;
-      transition: all 0.3s ease;
-    }
-    .team-row:hover .team-name {
-      color: var(--color-blue);
-      transform: translateX(4px);
-    }
-    .hover-thumb {
-      width: 86px;
-      height: 86px;
-      border-radius: 10px;
-      object-fit: cover;
-      opacity: 0;
-      transform: translateX(12px);
-      transition: all 0.3s ease;
-    }
-    .team-row:hover .hover-thumb {
-      opacity: 1;
-      transform: translateX(0);
-    }
-    .team-fade {
-      opacity: 0;
-      transform: translateY(8px);
-    }
-    .team-fade.show {
-      opacity: 1;
-      transform: translateY(0);
-      transition: all 0.35s ease;
-    }
-
-    .reveal {
-      opacity: 0;
-      transform: translateY(24px);
-    }
-    .reveal.visible {
-      opacity: 1;
-      transform: translateY(0);
-      transition: all 0.8s ease;
-      transition-delay: var(--delay, 0ms);
-    }
-
-    @media (max-width: 920px) {
-      .top-nav { grid-template-columns: auto 1fr auto; gap: 10px; height: 68px; }
-      .nav-links { gap: 14px; font-size: 12px; }
-      .hero-bottom-right { right: 5vw; bottom: 24px; }
-      .value-card.one, .value-card.two { position: static; margin-bottom: 16px; max-width: 100%; }
-      .values-layout { min-height: auto; }
-      .join-row { margin-top: 8px; }
-      .timeline-row { grid-template-columns: 24px 1fr; }
-      .timeline-year { grid-column: 2; }
-      .timeline-desc { grid-column: 2; margin-top: 0; }
-      .mosaic-wrap { min-height: 520px; }
-      .img-landscape { width: 100%; height: 220px; }
-      .img-portrait { right: 3%; top: 190px; width: min(48vw, 250px); height: 290px; }
-      .blue-accent-block { top: 420px; right: 0; width: 84px; height: 84px; }
-      .cap-portrait { right: 3%; top: 488px; }
-    }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0a0f1e" />
+  <meta name="description" content="Malnutrition screening with WHO Clinical Z-scores and AI Sign Detection." />
+  <title>Integrated Malnutrition Screening</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="css/app.css" />
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
 </head>
+
 <body>
-  <div class="top-nav-wrap" id="top-nav-wrap">
-    <nav class="top-nav container">
-      <a class="logo-mark" href="#" aria-label="Asklepios logo">
-        <span class="plus-icon"></span>
-      </a>
-      <ul class="nav-links">
-        <li><a href="#" class="active">Homepage</a></li>
-        <li><a href="#">Technology</a></li>
-        <li><a href="#">About Us</a></li>
-        <li><a href="#">Main Menu <span class="arrow">▾</span></a></li>
-        <li><a href="#">Resources</a></li>
-      </ul>
-      <div class="nav-right">
-        <a href="#">Contact Us</a>
-        <button class="square-plus-btn" aria-label="Open quick actions">
-          <span class="plus-icon"></span>
-        </button>
+  <div class="wrap">
+    <header>
+      <div class="header-top">
+        <div>
+          <h1 data-i18n="appTitle">Malnutrition Screening Hub</h1>
+          <p data-i18n="appSubtitle">WHO Clinical Growth Standards · AI Sign Detection · Two-Stage Visual Diagnostics
+          </p>
+        </div>
+        <select id="global-lang" class="report-lang-select lang-global" aria-label="Language">
+          <option value="en">English</option>
+          <option value="hi">हिंदी</option>
+          <option value="mr">मराठी</option>
+        </select>
       </div>
-    </nav>
+    </header>
+
+    <!-- UNIFIED INPUT SECTION -->
+    <main class="input-grid">
+      <section class="card" id="card-measurements">
+        <h2 data-i18n="sectionMeasure">1. Clinical Measurements</h2>
+        <form id="form-screening" autocomplete="on">
+          <label for="aadhar" data-i18n="labelAadhar" style="margin-top: 0;">Aadhar Number</label>
+          <input id="aadhar" name="aadhar" type="text" pattern="\d{12}" title="12-digit Aadhar number"
+            placeholder="e.g. 123456789012" data-i18n-ph="phAadhar" required />
+          <div class="grid2">
+            <div>
+              <label for="age" data-i18n="labelAge">Age (months)</label>
+              <input id="age" name="age" type="number" min="0" max="60" placeholder="e.g. 18" data-i18n-ph="phAge"
+                required />
+            </div>
+            <div>
+              <label for="sex" data-i18n="labelSex">Sex</label>
+              <select id="sex" name="sex" required>
+                <option value="M" data-i18n="optMale">Male</option>
+                <option value="F" data-i18n="optFemale">Female</option>
+              </select>
+            </div>
+          </div>
+          <div class="grid2">
+            <div>
+              <label for="weight" data-i18n="labelWeight">Weight (kg)</label>
+              <input id="weight" name="weight" type="number" step="0.01" min="0.5" max="40" placeholder="e.g. 8.2"
+                data-i18n-ph="phWeight" required />
+            </div>
+            <div>
+              <label for="height" data-i18n="labelHeight">Height (cm)</label>
+              <input id="height" name="height" type="number" step="0.1" min="30" max="150" placeholder="e.g. 76.0"
+                data-i18n-ph="phHeight" required />
+            </div>
+          </div>
+          <label for="muac" data-i18n="labelMuac">MUAC (mm, optional)</label>
+          <input id="muac" name="muac" type="number" min="50" max="210" placeholder="e.g. 124" data-i18n-ph="phMuac" />
+        </form>
+      </section>
+
+      <section class="card" id="card-images">
+        <h2 data-i18n="sectionImages">2. Visual Evidence (AI)</h2>
+        <div class="image-upload-group">
+          <div class="image-box" onclick="document.getElementById('input-face').click()">
+            <span class="label-box" data-i18n="labelFace">Face</span>
+            <input type="file" id="input-face" accept="image/*" capture="user" hidden />
+            <div class="preview-container"><img id="preview-face" src="" style="display:none" /></div>
+            <button type="button" class="btn-icon">📸</button>
+          </div>
+          <div class="image-box" onclick="document.getElementById('input-front').click()">
+            <span class="label-box" data-i18n="labelFront">Front</span>
+            <input type="file" id="input-front" accept="image/*" capture="environment" hidden />
+            <div class="preview-container"><img id="preview-front" src="" style="display:none" /></div>
+            <button type="button" class="btn-icon">📸</button>
+          </div>
+          <div class="image-box" onclick="document.getElementById('input-back').click()">
+            <span class="label-box" data-i18n="labelBack">Back</span>
+            <input type="file" id="input-back" accept="image/*" capture="environment" hidden />
+            <div class="preview-container"><img id="preview-back" src="" style="display:none" /></div>
+            <button type="button" class="btn-icon">📸</button>
+          </div>
+        </div>
+        <div id="model-status-bar" class="status-indicator">
+          <span id="model-status" data-i18n="lmsLoading">Loading...</span>
+        </div>
+      </section>
+    </main>
+
+    <div class="action-bar">
+      <button type="button" class="btn-primary" id="btn-analyze-all" data-i18n="btnAnalyze">Run Combined
+        Analysis</button>
+      <button type="button" class="btn-ghost" id="btn-generate-report" style="display:none;"
+        data-i18n="btnReport">Generate Report</button>
+      <button type="button" class="btn-ghost" id="btn-view-history" data-i18n="btnHistory">Past History</button>
+    </div>
+
+    <!-- RESULTS DASHBOARD -->
+    <div id="results-dashboard" class="dashboard" style="display: none;">
+
+      <!-- COLUMN 1: CLINICAL RESULTS -->
+      <section class="card results-panel" id="clinical-panel">
+        <div class="panel-header">
+          <h3 data-i18n="clinicalTitle">Clinical Screening Results</h3>
+          <span class="badge badge-standard" data-i18n="badgeWHO">WHO Growth Standards</span>
+        </div>
+
+        <div class="z-grid">
+          <div class="z-box">
+            <div class="k">WAZ</div>
+            <div class="v" id="out-waz">—</div>
+            <span id="pill-waz" class="pill pill-na">—</span>
+          </div>
+          <div class="z-box">
+            <div class="k">HAZ</div>
+            <div class="v" id="out-haz">—</div>
+            <span id="pill-haz" class="pill pill-na">—</span>
+          </div>
+          <div class="z-box">
+            <div class="k">WHZ</div>
+            <div class="v" id="out-whz">—</div>
+            <span id="pill-whz" class="pill pill-na">—</span>
+          </div>
+          <div class="z-box">
+            <div class="k">BAZ</div>
+            <div class="v" id="out-baz">—</div>
+            <span id="pill-baz" class="pill pill-na">—</span>
+          </div>
+        </div>
+
+        <div class="status-list">
+          <div class="status-item">
+            <span data-i18n="labelUnderweight">Underweight</span>
+            <span id="status-underweight" class="pill pill-na">—</span>
+          </div>
+          <div class="status-item">
+            <span data-i18n="labelStunting">Stunting</span>
+            <span id="status-stunting" class="pill pill-na">—</span>
+          </div>
+          <div class="status-item">
+            <span data-i18n="labelWasting">Wasting</span>
+            <span id="status-wasting" class="pill pill-na">—</span>
+          </div>
+        </div>
+
+        <div class="muac-box">
+          <strong data-i18n="muacDiagnosis">MUAC Diagnosis:</strong>
+          <p id="muac-summary">—</p>
+        </div>
+
+        <div id="acute-combined" class="acute-banner acute-na" data-i18n="waitingInput">Waiting for input...</div>
+      </section>
+
+      <!-- COLUMN 2: AI RESULTS (Binary) -->
+      <section class="card results-panel" id="ai-panel">
+        <div class="panel-header">
+          <h3 data-i18n="aiTitle">AI Classification</h3>
+          <span class="badge badge-ai" data-i18n="badgeResnet">ResNet Model</span>
+        </div>
+
+        <div id="ai-waiting" class="ai-loading-state">
+          <p data-i18n="aiUploadHint">Upload images to see AI prediction</p>
+        </div>
+
+        <div id="ai-result" class="ai-content" style="display: none;">
+          <div class="ai-score-ring">
+            <span class="ai-label" id="ai-prediction-label">—</span>
+            <span class="ai-confidence" id="ai-prediction-conf">—</span>
+          </div>
+          <div id="gradcam-thumbnails" style="display:flex; justify-content:center; gap:0.5rem; margin-top:1rem;"></div>
+          <p class="hint" data-i18n="aiStrictHint">This prediction is based strictly on visual signs detected in the
+            uploaded images.</p>
+        </div>
+
+        <div class="diagnosis-summary">
+          <h4 data-i18n="combinedAssess">Combined Assessment</h4>
+          <ul id="final-diagnosis"></ul>
+          <div id="confidence" class="confidence confidence-low">—</div>
+        </div>
+      </section>
+    </div>
+
+    <!-- YOLO DETECTION RESULTS (full width below) -->
+    <div id="yolo-dashboard" style="display:none;">
+      <div class="card">
+        <div class="panel-header">
+          <h3 data-i18n="yoloTitle">🔍 Sign Detection Analysis</h3>
+          <span class="badge badge-ai">YOLO + ResNet18</span>
+        </div>
+
+        <div id="yolo-severity-banner" class="acute-banner acute-na" style="margin-bottom:1.5rem; font-size:1rem;"
+          data-i18n="yoloAnalysing">
+          Analysing...
+        </div>
+
+        <div id="yolo-images" class="yolo-image-row"></div>
+
+        <div id="yolo-signs-section" style="margin-top:1.5rem;">
+          <h4 style="margin-bottom:1rem;" data-i18n="detectedSigns">Detected Clinical Signs</h4>
+          <div id="yolo-signs-list" class="signs-grid"></div>
+          <p id="yolo-no-signs" class="hint" style="display:none; margin-top:1rem;" data-i18n="noSignsFound">
+            No malnutrition signs were detected in the uploaded images.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- UTILITY SECTION -->
+    <section class="card accordion">
+      <details>
+        <summary data-i18n="storageTitle">Device Storage &amp; LMS Settings</summary>
+        <div class="util-grid">
+          <div class="util-box">
+            <label data-i18n="lmsDataSource">LMS Data Source</label>
+            <input id="lms-file" type="file" accept=".json" />
+            <div id="lms-status" class="hint" data-i18n="lmsLoading">Loading...</div>
+          </div>
+          <div class="util-box">
+            <label data-i18n="recordMgmt">Record Management</label>
+            <div class="row-actions">
+              <button type="button" class="btn-ghost" id="btn-export-records" data-i18n="btnExport">Export</button>
+              <button type="button" class="btn-ghost" id="btn-clear-records" data-i18n="btnClear">Clear All</button>
+            </div>
+          </div>
+        </div>
+      </details>
+    </section>
+
+    <footer data-i18n="footer">Clinical decisions require trained assessment. This tool is for screening support only.
+    </footer>
   </div>
 
-  <section class="hero">
-    <div class="hero-rings"></div>
-    <div class="hero-logo-float reveal" style="--delay: 100ms;">
-      <span class="plus-icon"></span>
-    </div>
-    <div class="container hero-title-wrap">
-      <h1 class="hero-line-1 reveal" style="--delay: 250ms;">Meets.</h1>
-      <h2 class="hero-line-2 reveal" style="--delay: 400ms;">ML+AI.</h2>
-    </div>
-    <div class="hero-bottom-right reveal" style="--delay: 550ms;">
-      <a href="#">Learn More</a>
-      <button class="square-plus-btn" aria-label="Learn more actions">
-        <span class="plus-icon"></span>
-      </button>
-    </div>
-  </section>
-
-  <section class="values">
-    <div class="container values-layout">
-      <article class="value-card one reveal" style="--delay: 100ms;">
-        <div class="l-bracket"></div>
-        <h3>Trust &amp; Integrity</h3>
-        <p>We uphold ethical standards in our work, ensuring the privacy and security of user data.</p>
-      </article>
-      <article class="value-card two reveal" style="--delay: 250ms;">
-        <div class="l-bracket"></div>
-        <h3>Innovation</h3>
-        <p>We strive to push the boundaries of healthcare design, constantly seeking ways to empower health-focused organizations.</p>
-      </article>
-
-      <div class="join-row reveal" style="--delay: 420ms;">
-        <span>Interested in joining?</span>
-        <button class="square-plus-btn" aria-label="Join us">
-          <span class="plus-icon"></span>
-        </button>
-      </div>
-    </div>
-  </section>
-  <div class="blue-peek"></div>
-
-  <section class="timeline">
-    <div class="container">
-      <p class="timeline-intro reveal" style="--delay: 120ms;">
-        We build long-term trust by designing as a strategic partner for healthcare leaders.
-      </p>
-      <div class="timeline-list">
-        <div class="timeline-row reveal" style="--delay: 220ms;">
-          <span class="plus-icon"></span>
-          <h3 class="timeline-year">2002</h3>
-          <p class="timeline-desc">Embracing the power of technology, Asklepios incorporates cutting-edge tools and processes into its design workflow.</p>
-        </div>
-        <div class="timeline-row reveal" style="--delay: 340ms;">
-          <span class="plus-icon"></span>
-          <h3 class="timeline-year">2008</h3>
-          <p class="timeline-desc">Recognizing the unique needs of the healthcare industry, Asklepios shifts its focus exclusively to biotech, pharma, and healthcare design.</p>
-        </div>
-        <div class="timeline-row reveal" style="--delay: 460ms;">
-          <span class="plus-icon"></span>
-          <h3 class="timeline-year">2024</h3>
-          <p class="timeline-desc">Asklepios continues to push boundaries, leveraging technology, science, and creativity to shape the future of healthcare design.</p>
+  <!-- REPORT MODAL -->
+  <div id="report-modal" class="report-modal-overlay" style="display:none;" role="dialog" aria-modal="true"
+    data-i18n-aria="reportModalTitle">
+    <div class="report-modal-box">
+      <div class="report-modal-toolbar">
+        <span class="report-modal-title" data-i18n="reportModalTitle">Risk Assessment Report</span>
+        <div class="report-modal-actions">
+          <button type="button" class="btn-ghost" id="btn-print-report" data-i18n="btnPrint">Print / Save PDF</button>
+          <button type="button" class="btn-icon" id="btn-close-report" aria-label="Close report">✕</button>
         </div>
       </div>
+      <div id="report-content" class="report-modal-body"></div>
     </div>
-  </section>
+  </div>
 
-  <section class="collage">
-    <div class="container">
-      <div class="mosaic-wrap">
-        <div class="reveal" style="--delay: 100ms;">
-          <img class="img-landscape" src="https://images.unsplash.com/photo-1579684453423-f84349ef60b0?auto=format&fit=crop&w=1400&q=80" alt="Medical landscape" />
-          <div class="caption">Image Caption 1</div>
+  <!-- HISTORY MODAL -->
+  <div id="history-modal" class="report-modal-overlay" style="display:none;" role="dialog" aria-modal="true"
+    data-i18n-aria="historyModalTitle">
+    <div class="report-modal-box">
+      <div class="report-modal-toolbar">
+        <span class="report-modal-title" data-i18n="historyModalTitle">Patient Trace History</span>
+        <div class="report-modal-actions">
+          <button type="button" class="btn-icon" id="btn-close-history" aria-label="Close history">✕</button>
         </div>
-        <img class="img-portrait reveal" style="--delay: 260ms;" src="https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&w=700&q=80" alt="Doctor portrait" />
-        <div class="caption cap-portrait">Image Caption 2</div>
-        <div class="blue-accent-block reveal" style="--delay: 420ms;"></div>
       </div>
-
-      <div class="vision-row reveal" style="--delay: 220ms;">
-        <span class="plus-icon"></span>
-        <p class="vision-text">Our vision is to empower individuals with personalized healthcare solutions</p>
+      <div id="history-content" class="report-modal-body" style="padding:1rem;">
+        <ul id="history-list"
+          style="list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:1rem;"></ul>
       </div>
     </div>
-  </section>
+  </div>
 
-  <section class="team">
-    <div class="container">
-      <h2 class="reveal">Meet Our Team</h2>
-      <div class="filters reveal" style="--delay: 140ms;">
-        <button class="filter-tab active" data-filter="LEADERSHIP">Leadership</button>
-        <button class="filter-tab" data-filter="ENGINEERING">Engineering</button>
-        <button class="filter-tab" data-filter="DESIGN">Design</button>
-        <button class="filter-tab" data-filter="MARKETING">Marketing</button>
-        <button class="filter-tab" data-filter="HUMAN RESOURCES">Human Resources</button>
-      </div>
-      <div class="core-label reveal" style="--delay: 220ms;">● Core Members</div>
-
-      <div class="team-list reveal" style="--delay: 260ms;" id="team-list"></div>
-    </div>
-  </section>
-
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0/dist/tf.min.js"></script>
+  <script type="module" src="js/app.js"></script>
   <script>
-    const navWrap = document.getElementById("top-nav-wrap");
-    const onScroll = () => {
-      if (window.scrollY > 8) navWrap.classList.add("scrolled");
-      else navWrap.classList.remove("scrolled");
-    };
-    window.addEventListener("scroll", onScroll);
-    onScroll();
-
-    const revealEls = document.querySelectorAll(".reveal");
-    const io = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add("visible");
-          io.unobserve(entry.target);
-        }
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then(reg => console.log('Service Worker registered', reg))
+          .catch(err => console.error('Service Worker registration failed', err));
       });
-    }, { threshold: 0.12 });
-    revealEls.forEach((el) => io.observe(el));
-
-    const teamData = [
-      { name: "Dr. Barry Allen", dept: "LEADERSHIP", img: "https://images.unsplash.com/photo-1614436163996-25cee5f54290?auto=format&fit=crop&w=280&q=80" },
-      { name: "Dr. Wilda Coleman", dept: "LEADERSHIP", img: "https://images.unsplash.com/photo-1651008376811-b90baee60c1f?auto=format&fit=crop&w=280&q=80" },
-      { name: "Dr. Dirk Rosales", dept: "ENGINEERING", img: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=280&q=80" },
-      { name: "Prof. Lucille Farell", dept: "DESIGN", img: "https://images.unsplash.com/photo-1594824476967-48c8b964273f?auto=format&fit=crop&w=280&q=80" },
-      { name: "Hilda B. Hancock", dept: "MARKETING", img: "https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=280&q=80" },
-      { name: "Dr. Camilla Blue", dept: "HUMAN RESOURCES", img: "https://images.unsplash.com/photo-1607746882042-944635dfe10e?auto=format&fit=crop&w=280&q=80" },
-      { name: "Dr. Gerald K.", dept: "ENGINEERING", img: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=280&q=80" },
-      { name: "Dr. Christine Wu", dept: "LEADERSHIP", img: "https://images.unsplash.com/photo-1614608682850-e0d6ed316d47?auto=format&fit=crop&w=280&q=80" }
-    ];
-
-    const tabs = document.querySelectorAll(".filter-tab");
-    const list = document.getElementById("team-list");
-    let current = "LEADERSHIP";
-
-    function renderTeam(dept) {
-      list.classList.add("team-fade");
-      const filtered = teamData.filter((m) => m.dept === dept);
-
-      setTimeout(() => {
-        list.innerHTML = "";
-        filtered.forEach((member) => {
-          const row = document.createElement("article");
-          row.className = "team-row";
-          row.innerHTML = `
-            <h3 class="team-name">${member.name}</h3>
-            <img class="hover-thumb" src="${member.img}" alt="${member.name}" />
-          `;
-          list.appendChild(row);
-        });
-        list.classList.remove("team-fade");
-        list.classList.add("show");
-      }, 150);
     }
-
-    tabs.forEach((tab) => {
-      tab.addEventListener("click", () => {
-        tabs.forEach((t) => t.classList.remove("active"));
-        tab.classList.add("active");
-        current = tab.dataset.filter;
-        renderTeam(current);
-      });
-    });
-    renderTeam(current);
   </script>
 </body>
+
 </html>

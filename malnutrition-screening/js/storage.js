@@ -106,6 +106,11 @@ export async function listScreeningRecords() {
   });
 }
 
+export async function getRecordsByAadhar(aadharNumber) {
+  const allRecords = await listScreeningRecords();
+  return allRecords.filter(r => r.input && String(r.input.aadhar).trim() === String(aadharNumber).trim());
+}
+
 export async function replaceScreeningRecords(records) {
   const db = await openDb();
   return new Promise((resolve, reject) => {

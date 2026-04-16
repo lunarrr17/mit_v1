@@ -30,88 +30,88 @@ const CONDITIONS_T = {
 
 const T = {
   en: {
-    title:                  'Patient Risk Assessment',
-    riskLabelMalnourished:  'MALNOURISHED',
-    riskLabelHealthy:       'HEALTHY',
-    generated:       'Generated',
-    measurements:    'Patient Measurements',
-    age:             'Age',
-    months:          'months',
-    sex:             'Sex',
-    male:            'Male',
-    female:          'Female',
-    weight:          'Weight',
-    height:          'Height',
-    muac:            'MUAC',
-    zscores:         'Clinical Z-Scores',
-    acuteCombined:   'Acute Combined',
-    aiClass:         'AI Classification',
-    prediction:      'Prediction',
-    score:           'Score',
-    signDetection:   'Sign Detection',
-    condition:       'Condition',
-    severity:        'Severity',
-    overallRisk:     'Overall Risk Level',
-    disclaimer:      'This screening tool supports — but does not replace — clinical assessment by a qualified health professional. All findings require clinical correlation.',
-    riskHigh:        'HIGH',
-    riskModerate:    'MODERATE',
-    riskLow:         'LOW',
+    title: 'Patient Risk Assessment',
+    riskLabelMalnourished: 'MALNOURISHED',
+    riskLabelHealthy: 'HEALTHY',
+    generated: 'Generated',
+    measurements: 'Patient Measurements',
+    age: 'Age',
+    months: 'months',
+    sex: 'Sex',
+    male: 'Male',
+    female: 'Female',
+    weight: 'Weight',
+    height: 'Height',
+    muac: 'MUAC',
+    zscores: 'Clinical Z-Scores',
+    acuteCombined: 'Acute Combined',
+    aiClass: 'AI Classification',
+    prediction: 'Prediction',
+    score: 'Score',
+    signDetection: 'Sign Detection',
+    condition: 'Condition',
+    severity: 'Severity',
+    overallRisk: 'Overall Risk Level',
+    disclaimer: 'This screening tool supports — but does not replace — clinical assessment by a qualified health professional. All findings require clinical correlation.',
+    riskHigh: 'HIGH',
+    riskModerate: 'MODERATE',
+    riskLow: 'LOW',
   },
   hi: {
-    title:           'रोगी जोखिम मूल्यांकन',
-    generated:       'तैयार किया गया',
-    measurements:    'रोगी माप',
-    age:             'आयु',
-    months:          'माह',
-    sex:             'लिंग',
-    male:            'पुरुष',
-    female:          'महिला',
-    weight:          'वजन',
-    height:          'ऊंचाई',
-    muac:            'मुआक',
-    zscores:         'नैदानिक Z-स्कोर',
-    acuteCombined:   'तीव्र संयुक्त',
-    aiClass:         'AI वर्गीकरण',
-    prediction:      'पूर्वानुमान',
-    score:           'स्कोर',
-    signDetection:   'संकेत पहचान',
-    condition:       'स्थिति',
-    severity:        'गंभीरता',
-    overallRisk:     'समग्र जोखिम स्तर',
-    disclaimer:      'यह स्क्रीनिंग उपकरण एक योग्य स्वास्थ्य पेशेवर द्वारा नैदानिक मूल्यांकन का समर्थन करता है — लेकिन उसकी जगह नहीं लेता। सभी निष्कर्षों के लिए नैदानिक सहसंबंध आवश्यक है।',
-    riskHigh:               'उच्च जोखिम',
-    riskModerate:           'मध्यम जोखिम',
-    riskLow:                'कम जोखिम',
-    riskLabelMalnourished:  'कुपोषित',
-    riskLabelHealthy:       'स्वस्थ',
+    title: 'रोगी जोखिम मूल्यांकन',
+    generated: 'तैयार किया गया',
+    measurements: 'रोगी माप',
+    age: 'आयु',
+    months: 'माह',
+    sex: 'लिंग',
+    male: 'पुरुष',
+    female: 'महिला',
+    weight: 'वजन',
+    height: 'ऊंचाई',
+    muac: 'मुआक',
+    zscores: 'नैदानिक Z-स्कोर',
+    acuteCombined: 'तीव्र संयुक्त',
+    aiClass: 'AI वर्गीकरण',
+    prediction: 'पूर्वानुमान',
+    score: 'स्कोर',
+    signDetection: 'संकेत पहचान',
+    condition: 'स्थिति',
+    severity: 'गंभीरता',
+    overallRisk: 'समग्र जोखिम स्तर',
+    disclaimer: 'यह स्क्रीनिंग उपकरण एक योग्य स्वास्थ्य पेशेवर द्वारा नैदानिक मूल्यांकन का समर्थन करता है — लेकिन उसकी जगह नहीं लेता। सभी निष्कर्षों के लिए नैदानिक सहसंबंध आवश्यक है।',
+    riskHigh: 'उच्च जोखिम',
+    riskModerate: 'मध्यम जोखिम',
+    riskLow: 'कम जोखिम',
+    riskLabelMalnourished: 'कुपोषित',
+    riskLabelHealthy: 'स्वस्थ',
   },
   mr: {
-    title:           'रुग्ण जोखीम मूल्यांकन',
-    generated:       'तयार केले',
-    measurements:    'रुग्णाचे मोजमाप',
-    age:             'वय',
-    months:          'महिने',
-    sex:             'लिंग',
-    male:            'पुरुष',
-    female:          'स्त्री',
-    weight:          'वजन',
-    height:          'उंची',
-    muac:            'मुआक',
-    zscores:         'नैदानिक Z-गुण',
-    acuteCombined:   'एकत्रित तीव्र',
-    aiClass:         'AI वर्गीकरण',
-    prediction:      'अंदाज',
-    score:           'गुण',
-    signDetection:   'चिन्ह शोध',
-    condition:       'स्थिती',
-    severity:        'तीव्रता',
-    overallRisk:     'एकूण जोखीम पातळी',
-    disclaimer:      'हे तपासणी साधन पात्र आरोग्य व्यावसायिकाद्वारे नैदानिक मूल्यांकनास सहाय्य करते — परंतु त्याची जागा घेत नाही. सर्व निष्कर्षांसाठी नैदानिक सहसंबंध आवश्यक आहे.',
-    riskHigh:               'उच्च धोका',
-    riskModerate:           'मध्यम धोका',
-    riskLow:                'कमी धोका',
-    riskLabelMalnourished:  'कुपोषित',
-    riskLabelHealthy:       'निरोगी',
+    title: 'रुग्ण जोखीम मूल्यांकन',
+    generated: 'तयार केले',
+    measurements: 'रुग्णाचे मोजमाप',
+    age: 'वय',
+    months: 'महिने',
+    sex: 'लिंग',
+    male: 'पुरुष',
+    female: 'स्त्री',
+    weight: 'वजन',
+    height: 'उंची',
+    muac: 'मुआक',
+    zscores: 'नैदानिक Z-गुण',
+    acuteCombined: 'एकत्रित तीव्र',
+    aiClass: 'AI वर्गीकरण',
+    prediction: 'अंदाज',
+    score: 'गुण',
+    signDetection: 'चिन्ह शोध',
+    condition: 'स्थिती',
+    severity: 'तीव्रता',
+    overallRisk: 'एकूण जोखीम पातळी',
+    disclaimer: 'हे तपासणी साधन पात्र आरोग्य व्यावसायिकाद्वारे नैदानिक मूल्यांकनास सहाय्य करते — परंतु त्याची जागा घेत नाही. सर्व निष्कर्षांसाठी नैदानिक सहसंबंध आवश्यक आहे.',
+    riskHigh: 'उच्च धोका',
+    riskModerate: 'मध्यम धोका',
+    riskLow: 'कमी धोका',
+    riskLabelMalnourished: 'कुपोषित',
+    riskLabelHealthy: 'निरोगी',
   },
 };
 
@@ -125,9 +125,9 @@ function worstRisk(...levels) {
 
 // Clinical z-score / MUAC → risk
 function clinicalRisk(acuteLevel) {
-  if (acuteLevel === 'severe')   return 'HIGH';
+  if (acuteLevel === 'severe') return 'HIGH';
   if (acuteLevel === 'moderate') return 'MODERATE';
-  if (acuteLevel === 'normal')   return 'LOW';
+  if (acuteLevel === 'normal') return 'LOW';
   return null; // 'na' → no data, don't vote
 }
 
@@ -143,9 +143,9 @@ function resnetRisk(finalLabel, avgProb) {
 // YOLO verified-sign count → risk
 function yoloRisk(allSigns) {
   const verified = allSigns.filter(s => s.verified).length;
-  if (verified >= 3)           return 'HIGH';
-  if (verified >= 1)           return 'MODERATE';
-  if (allSigns.length >= 3)    return 'MODERATE';
+  if (verified >= 3) return 'HIGH';
+  if (verified >= 1) return 'MODERATE';
+  if (allSigns.length >= 3) return 'MODERATE';
   return 'LOW';
 }
 
@@ -166,12 +166,12 @@ export function fuseSignals(zScoreResult, resnetData, yoloData) {
   const r3 = yoloRisk(allSigns);
 
   const votes = [r1, r2, r3].filter(Boolean);
-  const highVotes     = votes.filter(v => v === 'HIGH').length;
+  const highVotes = votes.filter(v => v === 'HIGH').length;
   const elevatedVotes = votes.filter(v => v === 'HIGH' || v === 'MODERATE').length;
 
   if (highVotes >= 1 && elevatedVotes >= 2) return 'HIGH';
-  if (highVotes >= 2)                        return 'HIGH';
-  if (elevatedVotes >= 2)                    return 'MODERATE';
+  if (highVotes >= 2) return 'HIGH';
+  if (elevatedVotes >= 2) return 'MODERATE';
   return worstRisk(...votes) || 'LOW';
 }
 
@@ -214,12 +214,12 @@ export function generateReport(zScoreResult, resnetData, yoloData, patientInputs
   const risk = fuseSignals(zScoreResult, resnetData, yoloData);
 
   // ── Patient ──────────────────────────────────────────────────────────────
-  const age    = patientInputs?.age    || '—';
+  const age = patientInputs?.age || '—';
   const sexRaw = patientInputs?.sex;
-  const sex    = sexRaw === 'M' ? t.male : sexRaw === 'F' ? t.female : '—';
+  const sex = sexRaw === 'M' ? t.male : sexRaw === 'F' ? t.female : '—';
   const weight = patientInputs?.weight || '—';
   const height = patientInputs?.height || '—';
-  const muac   = patientInputs?.muac   || '—';
+  const muac = patientInputs?.muac || '—';
 
   // ── Z-scores ─────────────────────────────────────────────────────────────
   const zs = zScoreResult?.zScores || {};
@@ -229,22 +229,22 @@ export function generateReport(zScoreResult, resnetData, yoloData, patientInputs
   // ── AI ───────────────────────────────────────────────────────────────────
   const rawLabel = resnetData?.final_label?.toLowerCase() || '';
   const resLabel = rawLabel === 'malnourished' ? t.riskLabelMalnourished
-                 : rawLabel === 'healthy'      ? t.riskLabelHealthy
-                 : (resnetData?.final_label?.toUpperCase() || '—');
-  const resProb  = resnetData
+    : rawLabel === 'healthy' ? t.riskLabelHealthy
+      : (resnetData?.final_label?.toUpperCase() || '—');
+  const resProb = resnetData
     ? `${(resnetData.average_probability * 100).toFixed(1)}%`
     : '—';
   const yoloCond = (() => {
     const c = yoloData?.condition || '—';
     return (CONDITIONS_T[lang] || {})[c] ?? c;
   })();
-  const yoloSev  = (() => {
+  const yoloSev = (() => {
     const s = yoloData?.severity || '—';
     return (CONDITIONS_T[lang] || {})[s] ?? s;
   })();
 
   // ── Date/time ────────────────────────────────────────────────────────────
-  const now  = new Date();
+  const now = new Date();
   const date = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
   const time = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
 
@@ -275,8 +275,8 @@ export function generateReport(zScoreResult, resnetData, yoloData, patientInputs
     <h4>${t.zscores} &nbsp;<span class="report-badge">WHO LMS</span></h4>
     <table class="report-table">
       <tr><td>WAZ</td><td>${zs.waz ?? '—'}</td><td>${escHtml(ns.underweight?.label || '—')}</td></tr>
-      <tr><td>HAZ</td><td>${zs.haz ?? '—'}</td><td>${escHtml(ns.stunting?.label    || '—')}</td></tr>
-      <tr><td>WHZ</td><td>${zs.whz ?? '—'}</td><td>${escHtml(ns.wasting?.label     || '—')}</td></tr>
+      <tr><td>HAZ</td><td>${zs.haz ?? '—'}</td><td>${escHtml(ns.stunting?.label || '—')}</td></tr>
+      <tr><td>WHZ</td><td>${zs.whz ?? '—'}</td><td>${escHtml(ns.wasting?.label || '—')}</td></tr>
       <tr><td>BAZ</td><td>${zs.baz ?? '—'}</td><td></td></tr>
     </table>
     <p class="report-note"><strong>${t.acuteCombined}:</strong> ${escHtml(acuteLabel)}</p>

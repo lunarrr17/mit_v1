@@ -131,6 +131,7 @@ label {
 }
 
 input[type="number"],
+input[type="text"],
 select {
   width: 100%;
   box-sizing: border-box;
@@ -598,6 +599,7 @@ details summary {
 
 .yolo-annotated-img {
   width: 100%;
+  max-width: 250px;
   border-radius: calc(var(--radius) - 2px);
   border: 1px solid hsl(var(--border));
   display: block;
@@ -845,9 +847,12 @@ details summary {
 
 /* ─── PRINT STYLES ────────────────────────────────────────────────────────── */
 @media print {
-  @page { margin: 1.2cm; size: A4; }
+  @page {
+    margin: 1.2cm;
+    size: A4;
+  }
 
-  body > *:not(#report-modal) {
+  body>*:not(#report-modal) {
     display: none !important;
   }
 

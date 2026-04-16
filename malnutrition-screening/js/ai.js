@@ -37,8 +37,8 @@ async function preprocessImage(imageSource) {
     // ResNet50 Preprocessing (Caffe style)
     const mean = tf.tensor1d([103.939, 116.779, 123.68]);
     const normalized = rgbGray.sub(mean);
-    
-    return normalized.expandDims(0); 
+
+    return normalized.expandDims(0);
   });
 }
 
@@ -63,7 +63,7 @@ export async function predict(images) {
   backTensor.dispose();
   prediction.dispose();
 
-  const isMalnourished = score[0] > 0.5; 
+  const isMalnourished = score[0] > 0.5;
   const confidence = isMalnourished ? score[0] : 1 - score[0];
 
   return {
