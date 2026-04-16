@@ -1,11 +1,11 @@
 .timeline-section {
-  background-color: var(--color-blue);
+  background: linear-gradient(180deg, #1d4ed8 0%, #0b1736 100%);
   color: var(--color-white);
-  padding: 6rem 2.5rem;
+  padding: 6rem 1.25rem;
 }
 
 .timeline-container {
-  max-width: 1000px;
+  max-width: var(--section-max-width);
   margin: 0 auto;
 }
 

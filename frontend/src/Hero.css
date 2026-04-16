@@ -1,7 +1,7 @@
 .hero {
   position: relative;
   min-height: 100vh;
-  background-color: #FFFFFF;
+  background: linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
   overflow: hidden;
   width: 100%;
 }
@@ -21,7 +21,7 @@
   font-family: var(--font-sans);
   font-size: clamp(3rem, 8vw, 7rem);
   font-weight: 700;
-  color: #0A0F2C;
+  color: var(--color-blue-strong);
   margin: 0;
   line-height: 1.1;
   letter-spacing: -0.03em;
@@ -37,8 +37,7 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  color: #1a4bff;
-  /* vibrant purple */
+  color: var(--color-blue);
 }
 
 .line-3 {
@@ -60,19 +59,17 @@
   font-family: var(--font-sans);
   font-size: 0.75rem;
   font-weight: 700;
-  color: #0A0F2C;
+  color: var(--color-blue-strong);
   letter-spacing: 1px;
   text-transform: uppercase;
   opacity: 0.8;
 }
 
 .hero-btn-square {
-  background-color: #1a4bff;
-  /* Highlight blue for the plus button */
+  background-color: var(--color-blue);
   width: 48px;
   height: 48px;
-  border-radius: 0;
-  /* Square borders as requested */
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -83,7 +80,7 @@
 
 .hero-btn-square:hover {
   transform: scale(1.05);
-  background-color: #123acc;
+  background-color: #1e40af;
 }
 
 @media (max-width: 900px) {

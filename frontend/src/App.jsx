@@ -6,6 +6,17 @@ import GenericPage from './pages/GenericPage';
 import ScreeningLabPage from './pages/ScreeningLabPage';
 import Footer from './Footer';
 import Lenis from 'lenis';
+import AdminDashboardPage from './pages/AdminDashboardPage';
+import { getAuth } from './auth';
+import LoginPage from './pages/LoginPage';
+
+const AdminRoute = ({ children }) => {
+  const auth = getAuth();
+  if (!auth || auth.role !== 'government_admin') {
+    return <Navigate to="/" replace />;
+  }
+  return children;
+};
 
 function App() {
   useEffect(() => {
@@ -27,7 +38,16 @@ function App() {
         <Route path="/main-menu" element={<GenericPage title="Main Menu" subtitle="Navigate all product streams and strategic initiatives from a centralized control page." />} />
         <Route path="/resources" element={<GenericPage title="Resources" subtitle="Guides, design references, implementation notes, and healthcare AI playbooks." />} />
         <Route path="/contact-us" element={<GenericPage title="Contact Us" subtitle="Book a strategy call or request a product walkthrough with the Asklepios team." />} />
+        <Route path="/login" element={<LoginPage />} />
         <Route path="/screening-lab" element={<ScreeningLabPage />} />
+        <Route
+          path="/admin/dashboard"
+          element={
+            <AdminRoute>
+              <AdminDashboardPage />
+            </AdminRoute>
+          }
+        />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <Footer />

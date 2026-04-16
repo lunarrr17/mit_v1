@@ -1,18 +1,48 @@
-import { useState, useEffect } from 'react';
-import { Plus, ChevronDown } from 'lucide-react';
-import { NavLink, Link } from 'react-router-dom';
+import { useState, useEffect, useRef } from 'react';
+import { Plus, ChevronDown, UserRound } from 'lucide-react';
+import { NavLink, Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { clearAuth, getAuth } from './auth';
 import './Navbar.css';
 
 const Navbar = () => {
   const { t, i18n } = useTranslation();
   const [scrolled, setScrolled] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef(null);
+  const navigate = useNavigate();
+  const auth = getAuth();
+  const isLoggedIn = Boolean(auth?.token);
+  const isAdmin = auth?.role === 'government_admin';
+  const roleLabel = isAdmin ? 'ADMIN' : 'WORKER';
+  const displayName = auth?.username ? String(auth.username).toUpperCase() : 'LOGGED IN USER';
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  useEffect(() => {
+    const handleDocClick = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleDocClick);
+    return () => document.removeEventListener('mousedown', handleDocClick);
+  }, []);
+
+  const handleQuickSwitch = () => {
+    setMenuOpen(false);
+    navigate(isAdmin ? '/admin/dashboard' : '/screening-lab');
+  };
+
+  const handleLogout = () => {
+    clearAuth();
+    setMenuOpen(false);
+    navigate('/');
+  };
 
   return (
     <nav className={`navbar-shell ${scrolled ? 'scrolled' : ''}`}>
@@ -40,11 +70,52 @@ const Navbar = () => {
           </ul>
         </div>
 
-        <div className="navbar-right" style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-          <div className="lang-switcher" style={{ display: 'flex', gap: '8px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold', color: '#0A0F2C' }}>
-            <span onClick={() => i18n.changeLanguage('en')} style={{ opacity: i18n.language === 'en' ? 1 : 0.5 }}>EN</span>
-            <span onClick={() => i18n.changeLanguage('hi')} style={{ opacity: i18n.language === 'hi' ? 1 : 0.5 }}>HI</span>
+        <div className="navbar-right">
+          <div className="lang-switcher">
+            <span
+              onClick={() => i18n.changeLanguage('en')}
+              style={{ opacity: i18n.language === 'en' ? 1 : 0.5 }}
+            >
+              EN
+            </span>
+            <span
+              onClick={() => i18n.changeLanguage('hi')}
+              style={{ opacity: i18n.language === 'hi' ? 1 : 0.5 }}
+            >
+              HI
+            </span>
           </div>
+          {!isLoggedIn ? (
+            <Link to="/login" className="role-btn role-btn-login">Login</Link>
+          ) : (
+            <div className="profile-card-wrap" ref={menuRef}>
+              <button
+                type="button"
+                className="profile-card-btn"
+                onClick={() => setMenuOpen((prev) => !prev)}
+                aria-expanded={menuOpen}
+                aria-haspopup="menu"
+              >
+                <div className="profile-meta">
+                  <strong>{displayName}</strong>
+                  <span>{roleLabel} • NUTRISCAN</span>
+                </div>
+                <UserRound size={18} />
+                <ChevronDown size={15} className={`profile-arrow ${menuOpen ? 'open' : ''}`} />
+              </button>
+
+              {menuOpen && (
+                <div className="profile-dropdown" role="menu">
+                  <button type="button" className="profile-action" onClick={handleQuickSwitch}>
+                    Go to {isAdmin ? 'Dashboard' : 'AI Screening Lab'}
+                  </button>
+                  <button type="button" className="profile-action danger" onClick={handleLogout}>
+                    Logout
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
           <NavLink to="/contact-us" className="contact-btn">
             {t('navbar.contact')} <Plus size={14} strokeWidth={2.5} style={{ marginLeft: '6px' }} />
           </NavLink>
