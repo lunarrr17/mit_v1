@@ -1,11 +1,11 @@
 .footer-section {
-  background-color: var(--color-dark);
+  background: linear-gradient(180deg, #0f172a 0%, #0b1736 100%);
   color: var(--color-white);
-  padding: 80px 2.5rem 40px;
+  padding: 80px 1.25rem 40px;
 }
 
 .footer-container {
-  max-width: 1000px;
+  max-width: var(--section-max-width);
   margin: 0 auto;
 }
 

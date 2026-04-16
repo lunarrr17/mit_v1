@@ -1,10 +1,16 @@
 :root {
-  --color-blue: #1A4BFF;        
-  --color-dark: #0D1117;        
-  --color-white: #FFFFFF;
-  --color-gray-light: #F5F5F5;  
-  --color-text: #111111;        
-  --color-text-muted: rgba(255,255,255,0.6); 
+  --color-blue: #1a4bff;
+  --color-blue-strong: #0a0f2c;
+  --color-accent: #1a4bff;
+  --color-dark: #0d1117;
+  --color-white: #ffffff;
+  --color-gray-light: #f5f5f5;
+  --color-surface: #ffffff;
+  --color-border: #d9dde6;
+  --color-text: #111111;
+  --color-text-soft: #334155;
+  --color-text-muted: rgba(226, 232, 240, 0.85);
+  --section-max-width: 1200px;
   --font-sans: 'DM Sans', sans-serif;
   --font-serif: 'Libre Baskerville', serif;
 }
@@ -22,6 +28,7 @@ body {
   background-color: var(--color-gray-light);
   overflow-x: hidden;
   scroll-behavior: smooth;
+  line-height: 1.5;
 }
 
 a {

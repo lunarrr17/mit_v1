@@ -3,7 +3,6 @@ import { Upload, AlertCircle, Activity, FileText, Printer, X } from 'lucide-reac
 import './Pages.css';
 import { analyzeScreening } from '../logic/diagnosis.js';
 import { generateReport } from '../logic/report.js';
-
 const ScreeningLabPage = () => {
   const [files, setFiles] = useState({ face: null, front: null, back: null });
   const [previews, setPreviews] = useState({ face: null, front: null, back: null });

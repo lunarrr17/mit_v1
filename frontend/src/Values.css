@@ -1,17 +1,17 @@
 .values {
   position: relative;
-  background-color: var(--color-dark);
+  background: linear-gradient(180deg, var(--color-dark) 0%, #111b31 100%);
   min-height: 50vh;
   display: flex;
   flex-direction: column;
-  padding: 6rem 2.5rem 0;
+  padding: 6rem 1.25rem 0;
   overflow: hidden;
 }
 
 .values-content {
   position: relative;
   z-index: 10;
-  max-width: 1200px;
+  max-width: var(--section-max-width);
   margin: 0 auto;
   width: 100%;
 }
@@ -26,7 +26,8 @@
 }
 
 .value-card {
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(241, 245, 249, 0.08);
+  border: 1px solid rgba(148, 163, 184, 0.22);
   backdrop-filter: blur(10px);
   padding: 2.5rem;
   width: 100%;
@@ -82,7 +83,7 @@
 }
 
 .join-btn {
-  background-color: var(--color-text-muted);
+  background-color: rgba(241, 245, 249, 0.25);
   width: 32px;
   height: 32px;
   border-radius: 8px;
@@ -98,7 +99,7 @@
 
 .blue-band-transition {
   height: 4rem;
-  background-color: var(--color-blue);
+  background-color: var(--color-blue-strong);
   width: 100%;
   margin-top: auto;
 }
