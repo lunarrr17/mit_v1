@@ -1,57 +1,25 @@
-import { useEffect, useRef } from 'react';
-import { Plus, Play } from 'lucide-react';
+import React from 'react';
+import { Plus } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import LiquidDonut from './LiquidDonut';
 import './Hero.css';
 
-const Hero = ({ onPlay, isAutoPlaying }) => {
-  const containerRef = useRef(null);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          const elements = entry.target.querySelectorAll('.stagger-anim');
-          elements.forEach((el, index) => {
-            setTimeout(() => {
-              el.classList.add('visible');
-            }, index * 50);
-          });
-        }
-      });
-    }, { threshold: 0.1 });
-
-    if (containerRef.current) {
-      observer.observe(containerRef.current);
-    }
-    return () => observer.disconnect();
-  }, []);
-
+const Hero = () => {
+  const { t } = useTranslation();
   return (
-    <section className="hero" ref={containerRef}>
-      <div className="hero-rings">
-        <div className="ring ring-1"></div>
-        <div className="ring ring-2"></div>
-        <div className="ring ring-3"></div>
-      </div>
+    <section className="hero">
+      <LiquidDonut />
       
-      <div className="hero-content">
-        <div className="hero-typography">
-          <h1 className="hero-line-0 stagger-anim">Detecting.</h1>
-          <h1 className="hero-line-1 stagger-anim">Malnutrition.</h1>
-          <h1 className="hero-line-2 stagger-anim">ML+AI.</h1>
-          
-          <div className="hero-play-wrap stagger-anim" style={{ position: 'relative', marginTop: '2rem', transform: 'none', bottom: 'auto', left: 'auto' }}>
-            <button className="hero-play-btn" onClick={onPlay} aria-label="Auto-play site sections">
-              <Play size={16} strokeWidth={2.4} color="var(--color-white)" fill="var(--color-white)" />
-            </button>
-            <span className="hero-play-label">{isAutoPlaying ? 'AUTO PLAYING' : 'LEARN MORE'}</span>
-          </div>
-        </div>
+      <div className="hero-text-layers">
+        <h1 className="hero-txt line-1">{t('hero.line1')}</h1>
+        <h1 className="hero-txt line-2">{t('hero.line2')}</h1>
+        <h1 className="hero-txt line-3">{t('hero.line3')}</h1>
       </div>
 
-      <div className="hero-bottom-right stagger-anim">
-        <a href="#values" className="learn-more-link">Learn More</a>
-        <button className="hero-btn" aria-label="Quick action">
-          <Plus size={18} strokeWidth={2.5} color="var(--color-white)" />
+      <div className="hero-bottom-right">
+        <span className="learn-more-label">{t('hero.learn')}</span>
+        <button className="hero-btn-square" aria-label="Learn More">
+          <Plus size={20} strokeWidth={2.5} color="var(--color-white)" />
         </button>
       </div>
     </section>

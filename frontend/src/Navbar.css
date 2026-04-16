@@ -5,17 +5,17 @@
   transform: translateX(-50%);
   width: min(1320px, calc(100% - 32px));
   border-radius: 999px;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  background-color: rgba(255, 255, 255, 0.94);
+  border: none;
+  background-color: transparent;
   z-index: 100;
   transition: all 0.3s ease;
 }
 
 .navbar-shell.scrolled {
-  background-color: rgba(255, 255, 255, 0.82);
+  background-color: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(9px);
   -webkit-backdrop-filter: blur(9px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
 }
 
 .navbar {
@@ -38,7 +38,7 @@
   font-size: 30px;
   font-weight: 700;
   line-height: 1;
-  color: var(--color-text);
+  color: #0A0F2C;
 }
 
 .nav-links {
@@ -52,7 +52,8 @@
   font-family: var(--font-sans);
   font-size: 0.875rem;
   font-weight: 500;
-  color: var(--color-text);
+  color: #0A0F2C;
+  background: transparent;
   letter-spacing: 0.2px;
   display: flex;
   align-items: center;
@@ -68,22 +69,23 @@
 }
 
 .contact-btn {
-  background-color: var(--color-blue);
+  background-color: #0A0F2C;
   min-width: 116px;
-  height: 34px;
-  border-radius: 999px;
+  height: 38px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--color-white);
+  color: #FFFFFF;
   font-size: 13px;
   font-weight: 600;
-  padding: 0 14px;
+  padding: 0 16px;
+  border: none;
 }
 
 .contact-btn:hover {
   transform: translateY(-1px);
-  background-color: #123acc;
+  background-color: #1a224f;
 }
 
 .dropdown {
@@ -126,6 +128,7 @@
   .nav-links {
     gap: 1rem;
   }
+
   .logo span {
     font-size: 24px;
   }

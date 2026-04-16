@@ -1,18 +1,21 @@
+import { useTranslation } from 'react-i18next';
 import { useState } from 'react';
 import './Team.css';
 
-const teamData = [
-  { name: "Swarali Patil", department: "ENGINEERING" },
-  { name: "Aswathi Pillai", department: "ENGINEERING" },
-  { name: "Rohan Shelke", department: "ENGINEERING" },
-  { name: "Dhruval Porwal", department: "LEADERSHIP" },
-  { name: "Pranav Mahajan", department: "LEADERSHIP" }
-];
-
-const filters = ["LEADERSHIP", "ENGINEERING"];
-
 const Team = () => {
-  const [activeFilter, setActiveFilter] = useState("LEADERSHIP");
+  const { t } = useTranslation();
+
+  const teamData = [
+    { name: "Swarali Patil", department: t("team.lead") },
+    { name: "Aswathi Pillai", department: t("team.eng") },
+    { name: "Rohan Shelke", department: t("team.eng") },
+    { name: "Dhruval Porwal", department: t("team.lead") },
+    { name: "Pranav Mahajan", department: t("team.lead") }
+  ];
+
+  const filters = [t("team.lead"), t("team.eng")];
+
+  const [activeFilter, setActiveFilter] = useState(t("team.lead"));
   const [isAnimating, setIsAnimating] = useState(false);
 
   const handleFilterClick = (filter) => {
@@ -29,8 +32,8 @@ const Team = () => {
   return (
     <section className="team-section">
       <div className="team-container">
-        <h2 className="team-header">Meet Our Team</h2>
-        
+        <h2 className="team-header">{t("team.title")}</h2>
+
         <div className="filter-row">
           {filters.map(filter => (
             <button
@@ -42,11 +45,11 @@ const Team = () => {
             </button>
           ))}
         </div>
-        
+
         <div className="core-label">
-          <span className="dot"></span> CORE MEMBERS
+          <span className="dot"></span> {t("team.core")}
         </div>
-        
+
         <div className={`team-list ${isAnimating ? 'fade-out' : 'fade-in'}`}>
           {filteredTeam.map((member, index) => (
             <div className="team-member-row" key={index}>

@@ -1,0 +1,70 @@
+.flow-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 40px 20px;
+  background: transparent;
+  flex-wrap: wrap;
+  max-width: 1200px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 10;
+}
+
+.flow-container.tech-flow {
+  padding: 20px 0;
+}
+
+.flow-box {
+  position: relative;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 18px 26px;
+  font-weight: 700;
+  color: #334155;
+  overflow: hidden;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+  transition: all 0.3s ease;
+}
+
+.flow-box:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(26, 75, 255, 0.2);
+}
+
+.flow-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: var(--color-blue, #1a4bff);
+  transition: width 0.4s ease-in-out;
+  z-index: 0;
+}
+
+.flow-text {
+  position: relative;
+  z-index: 1;
+  transition: color 0.3s ease;
+}
+
+.flow-box.filled .flow-text {
+  color: #fff;
+}
+
+.flow-arrow {
+  transition: all 0.3s ease;
+}
+
+@media (max-width: 860px) {
+  .flow-container {
+    flex-direction: column;
+    gap: 12px;
+  }
+  .flow-arrow {
+    transform: rotate(90deg);
+  }
+}

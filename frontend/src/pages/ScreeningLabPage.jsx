@@ -36,7 +36,7 @@ const ScreeningLabPage = () => {
       sex: patientInputs.sex,
       muacMm: patientInputs.muac
     });
-    
+
     const report = generateReport(zScoreResult, results?.predict, results?.detect, patientInputs, 'en');
     setReportHtml({ __html: report.html });
     setShowReport(true);
@@ -70,9 +70,9 @@ const ScreeningLabPage = () => {
         fetch('http://127.0.0.1:5000/predict', { method: 'POST', body: formData }),
         fetch('http://127.0.0.1:5000/detect', { method: 'POST', body: formData })
       ]);
-      
+
       if (!predictRes.ok || !detectRes.ok) {
-         throw new Error('Server returned an error.');
+        throw new Error('Server returned an error.');
       }
 
       const [predictData, detectData] = await Promise.all([
@@ -94,7 +94,7 @@ const ScreeningLabPage = () => {
         <p className="page-kicker">AI Screening Lab</p>
         <h1>Malnutrition Analysis</h1>
         <p>
-          Upload patient photos to run real-time dual-pipeline AI screening. 
+          Upload patient photos to run real-time dual-pipeline AI screening.
           The system uses ResNet18 for holistic evaluation and YOLO for localized sign detection.
         </p>
 
@@ -196,9 +196,9 @@ const ScreeningLabPage = () => {
               <div className="res-panel">
                 <h3>Detected Clinical Signs (YOLO)</h3>
                 <div className="signs-list">
-                  {Object.entries(results.detect.views || {}).flatMap(([viewName, viewData]) => 
+                  {Object.entries(results.detect.views || {}).flatMap(([viewName, viewData]) =>
                     viewData.signs.map((s, i) => (
-                      <div key={viewName+i} className="sign-item">
+                      <div key={viewName + i} className="sign-item">
                         <div className="sign-top">
                           <strong>{s.sign.replace(/_/g, ' ')}</strong>
                           {s.verified && <span className="verified-badge">Verified</span>}
@@ -218,13 +218,13 @@ const ScreeningLabPage = () => {
               <h3>Diagnostic Heatmaps & Annotations</h3>
               <div className="heatmap-grid">
                 {results.predict.views?.map(v => v.gradcam_image && (
-                  <div key={'gc'+v.view} className="heatmap-card">
+                  <div key={'gc' + v.view} className="heatmap-card">
                     <img src={`data:image/jpeg;base64,${v.gradcam_image}`} alt={`GradCAM ${v.view}`} />
                     <div className="k">{v.view} Heatmap (AI Focus)</div>
                   </div>
                 ))}
                 {Object.entries(results.detect.views || {}).map(([viewName, viewData]) => viewData.annotated_image && (
-                  <div key={'yl'+viewName} className="heatmap-card">
+                  <div key={'yl' + viewName} className="heatmap-card">
                     <img src={`data:image/jpeg;base64,${viewData.annotated_image}`} alt={`YOLO ${viewName}`} />
                     <div className="k">{viewName} Detections</div>
                   </div>
@@ -238,14 +238,14 @@ const ScreeningLabPage = () => {
       {showReport && (
         <div className="report-modal-overlay">
           <div className="report-modal-content">
-             <div className="report-modal-header">
-               <h2>Clinical Screening Report</h2>
-               <div style={{ display: 'flex', gap: '10px' }}>
-                 <button onClick={() => window.print()} className="btn-print"><Printer size={16} /> Export PDF / Print</button>
-                 <button onClick={() => setShowReport(false)} className="btn-close-modal"><X size={16} /></button>
-               </div>
-             </div>
-             <div className="report-doc-container" dangerouslySetInnerHTML={reportHtml} />
+            <div className="report-modal-header">
+              <h2>Clinical Screening Report</h2>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button onClick={() => window.print()} className="btn-print"><Printer size={16} /> Export PDF / Print</button>
+                <button onClick={() => setShowReport(false)} className="btn-close-modal"><X size={16} /></button>
+              </div>
+            </div>
+            <div className="report-doc-container" dangerouslySetInnerHTML={reportHtml} />
           </div>
         </div>
       )}

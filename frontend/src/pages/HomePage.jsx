@@ -42,7 +42,7 @@ const HomePage = () => {
   return (
     <>
       <div data-autoplay-section id="hero">
-        <Hero onPlay={runSectionAutoplay} isAutoPlaying={autoPlaying} />
+        <Hero />
       </div>
       <div data-autoplay-section id="values">
         <Values />

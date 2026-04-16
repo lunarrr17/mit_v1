@@ -1,23 +1,26 @@
+import { useTranslation } from 'react-i18next';
 import { useEffect, useRef } from 'react';
 import { Plus } from 'lucide-react';
 import './Timeline.css';
 
-const timelineData = [
-  {
-    year: "Phase 1",
-    desc: "Developing state-of-the-art ResNet18 and YOLOv8 models capable of detecting severe clinical signs and global malnutrition from photographs."
-  },
-  {
-    year: "Phase 2",
-    desc: "Integrating with the standard WHO LMS Growth Standards to deterministically fuse clinical z-scores with visual AI predictions."
-  },
-  {
-    year: "Phase 3",
-    desc: "NutriScan continues to push boundaries, leveraging computer vision and edge computing to eradicate child malnutrition efficiently."
-  }
-];
-
 const Timeline = () => {
+  const { t } = useTranslation();
+
+  const timelineData = [
+    {
+      year: t("time.p1"),
+      desc: t("time.d1")
+    },
+    {
+      year: t("time.p2"),
+      desc: t("time.d2")
+    },
+    {
+      year: t("time.p3"),
+      desc: t("time.d3")
+    }
+  ];
+
   const containerRef = useRef(null);
 
   useEffect(() => {
@@ -40,9 +43,9 @@ const Timeline = () => {
     <section className="timeline-section">
       <div className="timeline-container" ref={containerRef}>
         <div className="timeline-intro">
-          <p>Building trust and forging lasting partnerships through innovative design.</p>
+          <p>{t("time.intro")}</p>
         </div>
-        
+
         <div className="timeline-list">
           {timelineData.map((item, index) => (
             <div className="timeline-row fade-in-up" key={index} style={{ transitionDelay: `${index * 0.1}s` }}>
