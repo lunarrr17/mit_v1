@@ -1,4 +1,4 @@
-const CACHE = "malnutrition-screening-v2";
+const CACHE = "malnutrition-screening-v3";
 const PRECACHE_ASSETS = [
   "./index.html",
   "./css/app.css",

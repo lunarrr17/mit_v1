@@ -49,7 +49,6 @@ const Navbar = () => {
       <div className="navbar">
         <div className="navbar-left">
           <Link className="logo" to="/">
-            <Plus size={18} strokeWidth={2.6} color="#0A0F2C" />
             <span>NutriScan</span>
           </Link>
         </div>

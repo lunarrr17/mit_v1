@@ -5,6 +5,8 @@ from functools import wraps
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import requests
+import psycopg2
+from psycopg2.extras import RealDictCursor
 
 
 """
@@ -48,6 +50,63 @@ def _strip_auth_gateway_path_prefix():
 # In a real deployment, replace this with a proper secret and persistent storage.
 app.config["SECRET_KEY"] = os.environ.get("AUTH_GATEWAY_SECRET", "dev-secret-change-me")
 
+
+# ─── Database Integration ──────────────────────────────────────────────────────
+DB_URL = os.environ.get(
+    "DATABASE_URL",
+    "postgresql://neondb_owner:npg_c3OAuviMLl9D@ep-polished-credit-anlt5x40-pooler.c-6.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+)
+
+def get_db():
+    if not DB_URL:
+        return None
+    return psycopg2.connect(DB_URL, cursor_factory=RealDictCursor)
+
+def get_user_from_db(username):
+    db = get_db()
+    if not db:
+        return USERS.get(username)
+    try:
+        with db.cursor() as cur:
+            cur.execute("SELECT password_hash as password, role FROM workers WHERE username = %s LIMIT 1", (username,))
+            user = cur.fetchone()
+            if user: return user
+            cur.execute("SELECT password_hash as password, role FROM government_admins WHERE username = %s LIMIT 1", (username,))
+            return cur.fetchone()
+    finally:
+        db.close()
+
+def add_user_to_db(username, password, role):
+    db = get_db()
+    if not db:
+        USERS[username] = {"password": password, "role": role}
+        return
+    try:
+        with db.cursor() as cur:
+            if role == "worker":
+                cur.execute("INSERT INTO workers (username, password_hash, role) VALUES (%s, %s, %s)", (username, password, role))
+            else:
+                cur.execute("INSERT INTO government_admins (username, password_hash, role) VALUES (%s, %s, %s)", (username, password, role))
+        db.commit()
+    finally:
+        db.close()
+
+def log_screening(username, role, target_url, sent_files):
+    db = get_db()
+    if not db: return
+    try:
+        with db.cursor() as cur:
+            cur.execute("""
+                INSERT INTO screening_logs 
+                (performed_by_username, performed_by_role, ai_endpoint_used, face_image_provided, front_image_provided, back_image_provided)
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """, (username, role, target_url, 
+                  "face" in sent_files, "front" in sent_files, "back" in sent_files))
+        db.commit()
+    except Exception as e:
+        print("DB Log Error:", e)
+    finally:
+        db.close()
 
 # ─── Demo in‑memory user store ─────────────────────────────────────────────────
 
@@ -130,7 +189,7 @@ def login():
     username = data.get("username", "").strip()
     password = data.get("password", "")
 
-    user = USERS.get(username)
+    user = get_user_from_db(username)
     if not user or user.get("password") != password:
         return jsonify({"error": "Invalid credentials"}), 401
 
@@ -161,10 +220,10 @@ def signup():
         return jsonify({"error": "Password must be at least 4 characters"}), 400
     if role not in {"worker", "government_admin"}:
         return jsonify({"error": "Invalid role"}), 400
-    if username in USERS:
+    if get_user_from_db(username):
         return jsonify({"error": "Username already exists"}), 409
 
-    USERS[username] = {"password": password, "role": role}
+    add_user_to_db(username, password, role)
     token = create_token(username, role)
     return jsonify({"token": token, "role": role, "username": username}), 201
 
@@ -199,6 +258,13 @@ def _forward_files(target_url: str, files_keys):
 
     try:
         resp = requests.post(target_url, files=files, timeout=120)
+        user_payload = getattr(request, "user", {})
+        log_screening(
+            user_payload.get("username", "unknown"),
+            user_payload.get("role", "unknown"),
+            target_url, 
+            request.files.keys()
+        )
         return jsonify(resp.json()), resp.status_code
     except requests.RequestException as exc:
         return jsonify({"error": "Upstream request failed", "details": str(exc)}), 502

@@ -8,10 +8,10 @@ const YOLO_API_URL = isLocalhost
 
 
 
-import { loadLmsJson, saveLmsJson, saveScreeningRecord, getRecordsByAadhar, listScreeningRecords } from './storage.js';
-import { analyzeScreening } from './diagnosis.js';
-import { generateReport } from './report.js';
-import { applyLang, t, tLabel, tSign, tCondition, tAILabel, currentLang } from './i18n.js';
+import { loadLmsJson, saveLmsJson, saveScreeningRecord, getRecordsByAadhar, listScreeningRecords, clearScreeningRecords } from './storage.js?v=5';
+import { analyzeScreening } from './diagnosis.js?v=5';
+import { generateReport } from './report.js?v=5';
+import { applyLang, t, tLabel, tSign, tCondition, tAILabel, currentLang } from './i18n.js?v=5';
 
 // ─── ANALYSIS STATE ───────────────────────────────────────────────────────────
 const _state = {
@@ -141,23 +141,58 @@ async function autoFetchLms() {
   }
 }
 
+// ─── RECORD MANAGEMENT ────────────────────────────────────────────────────────
+document.getElementById('btn-export-records').addEventListener('click', async () => {
+  try {
+    const records = await listScreeningRecords();
+    if (!records || records.length === 0) {
+      alert("No records to export.");
+      return;
+    }
+    const blob = new Blob([JSON.stringify(records, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `screening-records-${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  } catch (err) {
+    alert("Export Error: " + err.message);
+  }
+});
+
+document.getElementById('btn-clear-records').addEventListener('click', async () => {
+  if (confirm("Are you sure you want to clear all screening records? This action cannot be undone.")) {
+    try {
+      await clearScreeningRecords();
+      alert("All records have been cleared.");
+      document.getElementById('history-list').innerHTML = '';
+      if (document.getElementById('history-modal').style.display === 'flex') {
+        document.getElementById('history-modal').style.display = 'none';
+      }
+    } catch (err) {
+      alert("Clear Error: " + err.message);
+    }
+  }
+});
+
 // ─── MAIN BUTTON ─────────────────────────────────────────────────────────────
 document.getElementById('btn-analyze-all').addEventListener('click', async () => {
   const form = document.getElementById('form-screening');
   if (!form.reportValidity()) return;
 
-  await runClinicalScreening();
-
-  const hasImages = uploadedFiles.face || uploadedFiles.front || uploadedFiles.back;
-  if (hasImages) {
-    await Promise.all([runAIAnalysis(), runYOLODetection()]);
-  } else {
-    showAIWaiting(t('aiNeedImages'));
-  }
-
-  document.getElementById('btn-generate-report').style.display = '';
-
   try {
+    await runClinicalScreening();
+
+    const hasImages = uploadedFiles.face || uploadedFiles.front || uploadedFiles.back;
+    if (hasImages) {
+      await Promise.all([runAIAnalysis(), runYOLODetection()]);
+    } else {
+      showAIWaiting(t('aiNeedImages'));
+    }
+
+    document.getElementById('btn-generate-report').style.display = '';
+
     const record = {
       input: getPatientInputs(),
       result: {
@@ -168,8 +203,11 @@ document.getElementById('btn-analyze-all').addEventListener('click', async () =>
     };
     await saveScreeningRecord(record);
     console.log("Successfully saved record to DB", record);
+    alert("Record saved successfully! You can now view it in Past History.");
+
   } catch (err) {
-    alert("Database Save Error: " + err.message);
+    console.error("Critical error during analysis or saving:", err);
+    alert("Error during analysis or saving: " + err.message);
   }
 });
 

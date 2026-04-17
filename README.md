@@ -62,6 +62,7 @@ python yolo_server.py
 # Runs on http://127.0.0.1:5001
 ```
 
+
 **Terminal 3 — PWA Frontend**
 ```bash
 cd malnutrition-screening

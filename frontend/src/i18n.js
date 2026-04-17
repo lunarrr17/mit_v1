@@ -8,7 +8,7 @@ const resources = {
         home: "Homepage", tech: "Technology", about: "About Us", menu: "Main Menu", resources: "Resources", contact: "Contact Us",
         overview: "Overview", lab: "AI Screening Lab"
       },
-      hero: { line1: "Health.", line2: "Meets.", line3: "ML+AI.", learn: "LEARN MORE" },
+      hero: { line1: "Health.", line2: "Meets.", line3: "AI.", learn: "LEARN MORE" },
       val: {
         t1: "Accuracy & Precision", d1: "We prioritize high-fidelity AI models to deliver the most reliable, deterministic scanning for child malnutrition symptoms.",
         t2: "Early Detection", d2: "By leveraging ML and computer vision, we provide rapid screening workflows to ensure no child slips through the cracks.",
