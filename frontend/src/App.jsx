@@ -3,6 +3,7 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import Navbar from './Navbar';
 import HomePage from './pages/HomePage';
 import GenericPage from './pages/GenericPage';
+import TechnologyPage from './pages/TechnologyPage';
 import ScreeningLabPage from './pages/ScreeningLabPage';
 import Footer from './Footer';
 import Lenis from 'lenis';
@@ -33,7 +34,7 @@ function App() {
       <Navbar />
       <Routes>
         <Route path="/" element={<HomePage />} />
-        <Route path="/technology" element={<GenericPage title="Technology" subtitle="Clinical-grade AI pipelines, explainability layers, and modular healthcare workflows." />} />
+        <Route path="/technology" element={<TechnologyPage />} />
         <Route path="/about-us" element={<GenericPage title="About Us" subtitle="A healthcare-first design and engineering practice focused on trust, evidence, and impact." />} />
         <Route path="/main-menu" element={<GenericPage title="Main Menu" subtitle="Navigate all product streams and strategic initiatives from a centralized control page." />} />
         <Route path="/resources" element={<GenericPage title="Resources" subtitle="Guides, design references, implementation notes, and healthcare AI playbooks." />} />

@@ -27,12 +27,14 @@ const Vision = () => {
     <section className="vision-section">
       <div className="vision-mosaic">
         <div className="mosaic-landscape">
-          <img src="https://images.unsplash.com/photo-1542868726-2580540ab3ce?auto=format&fit=crop&w=1400&q=80" alt="Clinical Environment" />
+          {/* REPLACE THIS IMAGE SOURCE (src) WITH YOUR OWN WIDE/LANDSCAPE IMAGE */}
+          <img src="https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=1400&q=80" alt="Clinical Technology Environment" />
           <span className="image-caption">{t("vis.img1")}</span>
         </div>
 
         <div className="mosaic-portrait">
-          <img src="https://images.unsplash.com/photo-1581594693702-fbdc51b2763b?auto=format&fit=crop&w=700&q=80" alt="Smiling Healthcare Professional" />
+          {/* REPLACE THIS IMAGE SOURCE (src) WITH YOUR OWN TALL/PORTRAIT IMAGE */}
+          <img src="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=700&q=80" alt="Laboratory Infrastructure" />
           <span className="image-caption">{t("vis.img2")}</span>
           <div className="mosaic-blue-block"></div>
         </div>

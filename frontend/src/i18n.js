@@ -15,10 +15,10 @@ const resources = {
         join: "INTERESTED IN JOINING?"
       },
       time: {
-        intro: "Building trust and forging lasting partnerships through innovative design.",
-        p1: "Phase 1", d1: "Developing state-of-the-art ResNet18 and YOLOv8 models capable of detecting severe clinical signs and global malnutrition from photographs.",
-        p2: "Phase 2", d2: "Integrating with the standard WHO LMS Growth Standards to deterministically fuse clinical z-scores with visual AI predictions.",
-        p3: "Phase 3", d3: "NutriScan continues to push boundaries, leveraging computer vision and edge computing to eradicate child malnutrition efficiently."
+        intro: "The 3-Step Malnutrition Detection Architecture",
+        p1: "1. Clinical Input", d1: "Inputting demographic and anthropometric data (Age, Weight, Height, MUAC) to compute deterministic WHO clinical z-scores.",
+        p2: "2. Visual Screening", d2: "Capturing frontal, dorsal, and facial photographs for analysis by our robust ResNet18 and YOLOv8 AI models.",
+        p3: "3. Combined Assessment", d3: "Fusing the AI visual analysis with baseline WHO standards to generate an explainable, printable screening report."
       },
       vis: {
         img1: "Rapid Diagnostic Solutions", img2: "AI Vision Infrastructure",
