@@ -6,6 +6,7 @@ from flask_cors import CORS
 import tensorflow as tf
 import numpy as np
 import cv2, json, os, base64, io
+import math
 
 # ─── Keras 2/3 compatibility patch ────────────────────────────────────────────
 from tensorflow.keras.layers import Layer, Dense, InputLayer
@@ -29,6 +30,133 @@ from PIL import Image
 
 app  = Flask(__name__)
 CORS(app)
+
+LMS_PATH = 'frontend/public/data/lms.json'
+LMS_DATA = None
+
+try:
+    with open(LMS_PATH, 'r', encoding='utf-8') as f:
+        LMS_DATA = json.load(f)
+except Exception as e:
+    print(f"[WARN] Could not load LMS data from {LMS_PATH}: {e}")
+
+
+def _to_float(v):
+    try:
+        if v is None or str(v).strip() == '':
+            return None
+        return float(v)
+    except Exception:
+        return None
+
+
+def _z_score(x, L, M, S):
+    if L == 0:
+        return math.log(x / M) / S
+    return ((x / M) ** L - 1) / (L * S)
+
+
+def _round2(v):
+    if v is None:
+        return None
+    return round(float(v), 2)
+
+
+def _interpolate_lms(lms, indicator, key_value, sex, key_name, age_band=None):
+    if not lms or indicator not in lms:
+        return None
+    rows = lms.get(indicator, {}).get(sex, [])
+    if not rows:
+        return None
+
+    filtered = []
+    for r in rows:
+        if age_band and r.get('ageBand') != age_band:
+            continue
+        if key_name not in r:
+            continue
+        try:
+            _ = float(r[key_name])
+            filtered.append(r)
+        except Exception:
+            continue
+
+    if not filtered:
+        return None
+
+    filtered.sort(key=lambda x: float(x[key_name]))
+    v = float(key_value)
+    first = filtered[0]
+    last = filtered[-1]
+
+    if v <= float(first[key_name]):
+        return {'L': float(first['L']), 'M': float(first['M']), 'S': float(first['S'])}
+    if v >= float(last[key_name]):
+        return {'L': float(last['L']), 'M': float(last['M']), 'S': float(last['S'])}
+
+    lower = first
+    upper = last
+    for i in range(len(filtered) - 1):
+        a = filtered[i]
+        b = filtered[i + 1]
+        av = float(a[key_name])
+        bv = float(b[key_name])
+        if av <= v <= bv:
+            lower, upper = a, b
+            break
+
+    lk = float(lower[key_name])
+    uk = float(upper[key_name])
+    if uk == lk:
+        return {'L': float(lower['L']), 'M': float(lower['M']), 'S': float(lower['S'])}
+
+    def interp(a, b):
+        return float(a) + (v - lk) * (float(b) - float(a)) / (uk - lk)
+
+    return {
+        'L': interp(lower['L'], upper['L']),
+        'M': interp(lower['M'], upper['M']),
+        'S': interp(lower['S'], upper['S']),
+    }
+
+
+def compute_z_scores_from_form(form):
+    if LMS_DATA is None:
+        return None
+
+    age = _to_float(form.get('age'))
+    weight = _to_float(form.get('weight'))
+    height = _to_float(form.get('height'))
+    sex_raw = (form.get('sex') or 'M').strip().upper()
+    sex = 'F' if sex_raw == 'F' else 'M'
+
+    if age is None or weight is None or height is None or weight <= 0 or height <= 0:
+        return None
+
+    waz = None
+    if age <= 120:
+        row = _interpolate_lms(LMS_DATA, 'waz', age, sex, 'age')
+        if row:
+            waz = _z_score(weight, row['L'], row['M'], row['S'])
+
+    haz = None
+    haz_row = _interpolate_lms(LMS_DATA, 'haz', age, sex, 'age')
+    if haz_row:
+        haz = _z_score(height, haz_row['L'], haz_row['M'], haz_row['S'])
+
+    whz = None
+    if age <= 60:
+        measurement = height + 0.7 if age < 24 else height
+        age_band = '0-2' if age < 24 else '2-5'
+        whz_row = _interpolate_lms(LMS_DATA, 'whz', measurement, sex, 'height', age_band=age_band)
+        if whz_row:
+            whz = _z_score(weight, whz_row['L'], whz_row['M'], whz_row['S'])
+
+    return {
+        'waz': _round2(waz),
+        'haz': _round2(haz),
+        'whz': _round2(whz),
+    }
 
 # ─── 1. TF ResNet (existing /predict endpoint) ────────────────────────────────
 MODEL_PATH = 'malnutrition-screening/model/malnutrition_resnet18.h5'
@@ -107,6 +235,7 @@ def predict():
     print("[DEBUG] Issue 2: Predict endpoint reached")
     print(f"[DEBUG] Issue 2: Request Payload (Files): {request.files}")
     probs, details = [], []
+    z_scores = compute_z_scores_from_form(request.form)
     for view in ['face','front','back']:
         if view not in request.files: continue
         tensor, img_for_overlay = preprocess(request.files[view].read(), view)
@@ -125,7 +254,7 @@ def predict():
     avg   = float(np.mean(probs)) if probs else 0.0
     label = CLASSES[int(avg >= THRESHOLD)] if probs else 'UNKNOWN'
     return jsonify({'final_label': label, 'average_probability': round(avg,4),
-                    'threshold': THRESHOLD, 'views': details})
+                    'threshold': THRESHOLD, 'views': details, 'z_scores': z_scores})
 
 # ─── 2. YOLO + PyTorch ResNet18 (new /detect endpoint) ───────────────────────
 DEVICE      = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -213,6 +342,7 @@ def img_to_b64(img_bgr):
 def detect():
     view_results = {}
     all_signs    = []
+    z_scores = compute_z_scores_from_form(request.form)
 
     for view in ['face', 'front', 'back']:
         if view not in request.files:
@@ -282,7 +412,8 @@ def detect():
         'verified_count': sum(1 for s in all_signs if s['verified']),
         'marasmus_signs': [s['sign'] for s in marasmus_signs],
         'kwashiorkor_signs': [s['sign'] for s in kwashiorkor_signs],
-        'views': view_results
+        'views': view_results,
+        'z_scores': z_scores
     })
 
 @app.route('/health', methods=['GET'])

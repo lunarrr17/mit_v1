@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import {
   Bar,
   BarChart,
@@ -14,15 +15,15 @@ import {
   AlertCircle,
   Bell,
   ChartLine,
-  FileText,
   LogOut,
-  MapPinned,
   Settings,
-  TriangleAlert,
   UserRound,
 } from 'lucide-react';
 import './Pages.css';
 import '../AdminDashboardPage.css';
+import { listScreeningRecords } from '../logic/storage.js';
+import { getAuth } from '../auth';
+import { getAuthGatewayBase } from '../apiConfig';
 
 const METRICS = [
   { label: 'TOTAL SCREENINGS', value: '42.8M', growth: '+12.5%', tone: 'up' },
@@ -79,15 +80,70 @@ const SCREENING_INTELLIGENCE = [
   },
 ];
 
-const reportsTable = SCREENING_INTELLIGENCE.map((item, idx) => ({
-  id: `NS-26-${101 + idx}`,
-  location: `${item.region} - ${item.city}`,
-  severity: item.severity,
-  impacted: item.impacted,
-  date: item.date,
-}));
-
 const AdminDashboardPage = () => {
+  const [recentReports, setRecentReports] = useState([]);
+
+  useEffect(() => {
+    const loadRecentReports = async () => {
+      const auth = getAuth();
+      if (auth?.token) {
+        try {
+          const res = await fetch(`${getAuthGatewayBase()}/admin/reports?limit=8`, {
+            headers: { Authorization: `Bearer ${auth.token}` }
+          });
+          if (res.ok) {
+            const data = await res.json();
+            const rows = data?.reports || [];
+            if (Array.isArray(rows)) {
+              setRecentReports(rows);
+              return;
+            }
+          }
+        } catch {
+          // fall back to local records
+        }
+      }
+
+      listScreeningRecords()
+        .then((rows) => {
+          const latest = [...(rows || [])]
+            .sort((a, b) => String(b.createdAtUtc).localeCompare(String(a.createdAtUtc)))
+            .slice(0, 8);
+          setRecentReports(latest);
+        })
+        .catch(() => setRecentReports([]));
+    };
+
+    loadRecentReports();
+  }, []);
+
+  const formatDate = (iso) => {
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return '—';
+    return d.toLocaleString('en-GB', {
+      day: '2-digit',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const formatSeverity = (record) => {
+    const raw =
+      record?.result?.detect?.severity ||
+      record?.result?.risk ||
+      'UNKNOWN';
+    return String(raw).toUpperCase();
+  };
+
+  const severityClass = (severity) => {
+    const s = String(severity || '').toLowerCase();
+    if (s.includes('critical') || s.includes('high')) return 'high';
+    if (s.includes('moderate')) return 'moderate';
+    if (s.includes('low')) return 'low';
+    return 'critical';
+  };
+
   return (
     <main className="gov-dashboard-shell">
       <aside className="gov-sidebar">
@@ -97,10 +153,6 @@ const AdminDashboardPage = () => {
         </div>
         <nav className="gov-nav">
           <button className="active"><ChartLine size={16} />Overview</button>
-          <button><MapPinned size={16} />Regional</button>
-          <button><AlertCircle size={16} />Statistics</button>
-          <button><TriangleAlert size={16} />Hotspots</button>
-          <button><FileText size={16} />Reports</button>
         </nav>
         <div className="gov-sidebar-footer">
           <button><Settings size={16} />Settings</button>
@@ -227,21 +279,27 @@ const AdminDashboardPage = () => {
             </article>
 
             <article className="panel-card slim">
-              <h3>REPORTS SECTION</h3>
+              <h3>RECENT AI SCREENING REPORTS</h3>
               <div className="reports-grid-head">
                 <span>Report ID</span>
-                <span>Location</span>
+                <span>Child Profile</span>
                 <span>Severity</span>
-                <span>Impacted</span>
+                <span>Generated</span>
               </div>
-              {reportsTable.map((row) => (
-                <div key={row.id} className="reports-grid-row">
-                  <span>{row.id}</span>
-                  <span>{row.location}</span>
-                  <span className={`severity ${row.severity.toLowerCase()}`}>{row.severity}</span>
-                  <span>{row.impacted}</span>
-                </div>
-              ))}
+              {recentReports.length === 0 && (
+                <p className="reports-empty">No generated reports yet.</p>
+              )}
+              {recentReports.map((row) => {
+                const sev = formatSeverity(row);
+                return (
+                  <div key={row.id} className="reports-grid-row">
+                    <span>{`NS-${String(row.id).slice(0, 6).toUpperCase()}`}</span>
+                    <span>{`${row?.input?.age || '—'}m · ${row?.input?.sex || '—'}`}</span>
+                    <span className={`severity ${severityClass(sev)}`}>{sev}</span>
+                    <span>{formatDate(row.createdAtUtc)}</span>
+                  </div>
+                );
+              })}
             </article>
           </aside>
         </div>

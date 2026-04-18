@@ -1,5 +1,6 @@
 import os
 import uuid
+import json
 from functools import wraps
 
 from flask import Flask, request, jsonify
@@ -127,6 +128,7 @@ USERS = {
 
 # token -> {"username": ..., "role": ...}
 ACTIVE_TOKENS = {}
+MEM_REPORTS = []
 
 
 def create_token(username: str, role: str) -> str:
@@ -169,6 +171,110 @@ def require_role(*allowed_roles):
         return wrapper
 
     return decorator
+
+
+def ensure_reports_table():
+    db = get_db()
+    if not db:
+        return
+    try:
+        with db.cursor() as cur:
+            cur.execute(
+                """
+                CREATE TABLE IF NOT EXISTS generated_reports (
+                    id UUID PRIMARY KEY,
+                    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                    performed_by_username TEXT,
+                    performed_by_role TEXT,
+                    patient_input JSONB,
+                    report_result JSONB
+                )
+                """
+            )
+        db.commit()
+    except Exception as e:
+        print("DB Reports Table Error:", e)
+    finally:
+        db.close()
+
+
+def save_generated_report(username, role, input_payload, result_payload):
+    report_id = uuid.uuid4().hex
+    report_row = {
+        "id": report_id,
+        "createdAtUtc": None,
+        "performedByUsername": username,
+        "performedByRole": role,
+        "input": input_payload or {},
+        "result": result_payload or {},
+    }
+
+    db = get_db()
+    if not db:
+        report_row["createdAtUtc"] = request.headers.get("X-Client-Time") or ""
+        MEM_REPORTS.append(report_row)
+        return report_row
+
+    try:
+        with db.cursor() as cur:
+            cur.execute(
+                """
+                INSERT INTO generated_reports
+                (id, performed_by_username, performed_by_role, patient_input, report_result)
+                VALUES (%s, %s, %s, %s::jsonb, %s::jsonb)
+                RETURNING created_at
+                """,
+                (report_id, username, role, json.dumps(input_payload or {}), json.dumps(result_payload or {})),
+            )
+            created = cur.fetchone()
+            report_row["createdAtUtc"] = created["created_at"].isoformat() if created and created.get("created_at") else None
+        db.commit()
+    except Exception as e:
+        print("DB Save Report Error:", e)
+        report_row["createdAtUtc"] = request.headers.get("X-Client-Time") or ""
+        MEM_REPORTS.append(report_row)
+    finally:
+        db.close()
+
+    return report_row
+
+
+def list_generated_reports(limit=20):
+    db = get_db()
+    if not db:
+        rows = list(MEM_REPORTS)
+        rows.sort(key=lambda r: str(r.get("createdAtUtc", "")), reverse=True)
+        return rows[:limit]
+
+    out = []
+    try:
+        with db.cursor() as cur:
+            cur.execute(
+                """
+                SELECT id, created_at, performed_by_username, performed_by_role, patient_input, report_result
+                FROM generated_reports
+                ORDER BY created_at DESC
+                LIMIT %s
+                """,
+                (limit,),
+            )
+            rows = cur.fetchall() or []
+            for r in rows:
+                out.append(
+                    {
+                        "id": str(r.get("id")),
+                        "createdAtUtc": r.get("created_at").isoformat() if r.get("created_at") else None,
+                        "performedByUsername": r.get("performed_by_username"),
+                        "performedByRole": r.get("performed_by_role"),
+                        "input": r.get("patient_input") or {},
+                        "result": r.get("report_result") or {},
+                    }
+                )
+    except Exception as e:
+        print("DB List Reports Error:", e)
+    finally:
+        db.close()
+    return out
 
 
 # ─── Auth endpoints ────────────────────────────────────────────────────────────
@@ -233,6 +339,33 @@ def signup():
 def whoami():
     payload = getattr(request, "user", {})
     return jsonify({"user": payload})
+
+
+@app.route("/reports", methods=["POST"])
+@require_role("worker", "government_admin")
+def create_report():
+    ensure_reports_table()
+    payload = request.get_json(silent=True) or {}
+    user_payload = getattr(request, "user", {})
+    row = save_generated_report(
+        user_payload.get("username", "unknown"),
+        user_payload.get("role", "unknown"),
+        payload.get("input"),
+        payload.get("result"),
+    )
+    return jsonify({"ok": True, "report": row}), 201
+
+
+@app.route("/admin/reports", methods=["GET"])
+@require_role("government_admin")
+def admin_reports():
+    ensure_reports_table()
+    try:
+        limit = int(request.args.get("limit", "20"))
+    except Exception:
+        limit = 20
+    limit = max(1, min(limit, 100))
+    return jsonify({"reports": list_generated_reports(limit=limit)})
 
 
 # ─── Worker-facing routes (restricted to role=worker) ─────────────────────────

@@ -1,18 +1,57 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Upload, AlertCircle, Activity, FileText, Printer, X } from 'lucide-react';
 import './Pages.css';
 import { analyzeScreening } from '../logic/diagnosis.js';
 import { generateReport } from '../logic/report.js';
+import { saveScreeningRecord } from '../logic/storage.js';
+import { getAuth } from '../auth';
+import { getAuthGatewayBase } from '../apiConfig';
 const ScreeningLabPage = () => {
   const [files, setFiles] = useState({ face: null, front: null, back: null });
   const [previews, setPreviews] = useState({ face: null, front: null, back: null });
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState(null);
+  const [clinicalResult, setClinicalResult] = useState(null);
   const [error, setError] = useState('');
   const [patientInputs, setPatientInputs] = useState({ age: '', sex: 'M', weight: '', height: '', muac: '' });
   const [lmsData, setLmsData] = useState(null);
   const [showReport, setShowReport] = useState(false);
   const [reportHtml, setReportHtml] = useState({ __html: '' });
+
+  const clinicalAnalysis = useMemo(() => {
+    if (!lmsData || !patientInputs.age || !patientInputs.weight || !patientInputs.height) return null;
+    return analyzeScreening({
+      lms: lmsData,
+      ageMonths: patientInputs.age,
+      weightKg: patientInputs.weight,
+      heightCm: patientInputs.height,
+      sex: patientInputs.sex,
+      muacMm: patientInputs.muac
+    });
+  }, [lmsData, patientInputs]);
+
+  const backendZScores =
+    results?.predict?.zScores ||
+    results?.predict?.z_scores ||
+    results?.detect?.zScores ||
+    results?.detect?.z_scores ||
+    clinicalResult?.zScores ||
+    clinicalAnalysis?.zScores ||
+    null;
+
+  const formatZ = (value) => {
+    const n = Number(value);
+    return Number.isFinite(n) ? n.toFixed(2) : '—';
+  };
+
+  const getZSeverity = (value) => {
+    const n = Number(value);
+    if (!Number.isFinite(n)) return { label: 'N/A', cls: 'na' };
+    if (n < -3) return { label: 'Severe', cls: 'red' };
+    if (n < -2) return { label: 'Moderate', cls: 'orange' };
+    if (n <= 2) return { label: 'Normal', cls: 'green' };
+    return { label: 'Elevated', cls: 'amber' };
+  };
 
   useEffect(() => {
     fetch('/data/lms.json').then(r => r.json()).then(setLmsData).catch(e => console.error('Failed to load LMS', e));
@@ -27,7 +66,7 @@ const ScreeningLabPage = () => {
       alert("Still loading LMS database...");
       return;
     }
-    const zScoreResult = analyzeScreening({
+    const zScoreResult = clinicalResult || clinicalAnalysis || analyzeScreening({
       lms: lmsData,
       ageMonths: patientInputs.age,
       weightKg: patientInputs.weight,
@@ -39,6 +78,36 @@ const ScreeningLabPage = () => {
     const report = generateReport(zScoreResult, results?.predict, results?.detect, patientInputs, 'en');
     setReportHtml({ __html: report.html });
     setShowReport(true);
+
+    const recordPayload = {
+      input: {
+        age: patientInputs.age,
+        sex: patientInputs.sex,
+        weight: patientInputs.weight,
+        height: patientInputs.height,
+        muac: patientInputs.muac
+      },
+      result: {
+        risk: report.risk,
+        zScores: zScoreResult?.zScores || null,
+        predict: results?.predict || null,
+        detect: results?.detect || null
+      }
+    };
+
+    saveScreeningRecord(recordPayload).catch((e) => console.error('Failed to save screening report record', e));
+
+    const auth = getAuth();
+    if (auth?.token) {
+      fetch(`${getAuthGatewayBase()}/reports`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${auth.token}`
+        },
+        body: JSON.stringify(recordPayload)
+      }).catch((e) => console.error('Failed to sync report to gateway', e));
+    }
   };
 
 
@@ -58,11 +127,17 @@ const ScreeningLabPage = () => {
     setError('');
     setLoading(true);
     setResults(null);
+    setClinicalResult(null);
 
     const formData = new FormData();
     if (files.face) formData.append('face', files.face);
     if (files.front) formData.append('front', files.front);
     if (files.back) formData.append('back', files.back);
+    formData.append('age', patientInputs.age);
+    formData.append('weight', patientInputs.weight);
+    formData.append('height', patientInputs.height);
+    formData.append('sex', patientInputs.sex);
+    formData.append('muac', patientInputs.muac);
 
     try {
       const [predictRes, detectRes] = await Promise.all([
@@ -80,6 +155,16 @@ const ScreeningLabPage = () => {
       ]);
 
       setResults({ predict: predictData, detect: detectData });
+      if (lmsData && patientInputs.age && patientInputs.weight && patientInputs.height) {
+        setClinicalResult(analyzeScreening({
+          lms: lmsData,
+          ageMonths: patientInputs.age,
+          weightKg: patientInputs.weight,
+          heightCm: patientInputs.height,
+          sex: patientInputs.sex,
+          muacMm: patientInputs.muac
+        }));
+      }
     } catch (err) {
       setError('Failed to connect to the AI screening servers. Make sure server.py is running on port 5000.');
     } finally {
@@ -210,6 +295,43 @@ const ScreeningLabPage = () => {
                     <p className="no-signs">No severe malnutrition signs detected.</p>
                   )}
                 </div>
+              </div>
+
+              <div className="res-panel">
+                <h3>Clinical Z-Scores (WHO LMS)</h3>
+                {backendZScores ? (
+                  <div className="zscore-table-wrap">
+                    <table className="zscore-table">
+                      <thead>
+                        <tr>
+                          <th>Index</th>
+                          <th>Z-Score</th>
+                          <th>Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {[
+                          { key: 'waz', label: 'WAZ' },
+                          { key: 'haz', label: 'HAZ' },
+                          { key: 'whz', label: 'WHZ' }
+                        ].map((row) => {
+                          const sev = getZSeverity(backendZScores?.[row.key]);
+                          return (
+                            <tr key={row.key}>
+                              <td><strong>{row.label}</strong></td>
+                              <td>{formatZ(backendZScores?.[row.key])}</td>
+                              <td>
+                                <span className={`z-pill z-pill-${sev.cls}`}>{sev.label}</span>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <p className="no-signs">Enter age, weight, and height to calculate z-scores.</p>
+                )}
               </div>
             </div>
 
