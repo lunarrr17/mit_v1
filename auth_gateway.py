@@ -1,62 +1,41 @@
 import os
 import uuid
 import json
-from functools import wraps
+from typing import Optional
 
-from flask import Flask, request, jsonify
-from flask_cors import CORS
+from fastapi import FastAPI, Request, File, UploadFile, Header, HTTPException, status, Depends
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 import requests
 import psycopg2
 from psycopg2.extras import RealDictCursor
+import uvicorn
 
+app = FastAPI()
 
-"""
-Auth + routing gateway for existing model servers.
-
-IMPORTANT:
-- This file is completely standalone and does NOT modify or import the
-  existing model servers' Flask apps. It only forwards HTTP requests to
-  them, so `server.py` and `yolo_server.py` remain unchanged.
-
-RUN EXAMPLE (in a separate terminal):
-    python auth_gateway.py
-
-This assumes:
-- `server.py` is running on http://localhost:5000
-- `yolo_server.py` is running on http://localhost:5001
-"""
-
-
-app = Flask(__name__)
-# Explicit dev origins help when the browser calls the API directly (not via Vite proxy).
-CORS(
-    app,
-    resources={r"/*": {"origins": "*"}},
-    supports_credentials=False,
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
-# Vite dev proxy uses path prefix /auth-gateway; if that request hits Flask directly (proxy off),
-# strip the prefix so routes like /signup still match.
-_AUTH_GATEWAY_PREFIX = "/auth-gateway"
+# Vite dev proxy uses path prefix /auth-gateway; strip it using middleware
+@app.middleware("http")
+async def strip_auth_gateway_prefix(request: Request, call_next):
+    path = request.url.path
+    prefix = "/auth-gateway"
+    if path.startswith(prefix + "/"):
+        request.scope["path"] = path[len(prefix):]
+    elif path == prefix:
+        request.scope["path"] = "/"
+    response = await call_next(request)
+    return response
 
 
-@app.before_request
-def _strip_auth_gateway_path_prefix():
-    path = request.environ.get("PATH_INFO", "") or ""
-    if path.startswith(_AUTH_GATEWAY_PREFIX + "/"):
-        request.environ["PATH_INFO"] = path[len(_AUTH_GATEWAY_PREFIX) :]
-    elif path == _AUTH_GATEWAY_PREFIX:
-        request.environ["PATH_INFO"] = "/"
-
-# In a real deployment, replace this with a proper secret and persistent storage.
-app.config["SECRET_KEY"] = os.environ.get("AUTH_GATEWAY_SECRET", "dev-secret-change-me")
-
-
-# ─── Database Integration ──────────────────────────────────────────────────────
-DB_URL = os.environ.get(
-    "DATABASE_URL",
-    "postgresql://neondb_owner:npg_c3OAuviMLl9D@ep-polished-credit-anlt5x40-pooler.c-6.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
-)
+app.config = {"SECRET_KEY": os.environ.get("AUTH_GATEWAY_SECRET", "dev-secret-change-me")}
+DB_URL = os.environ.get("DATABASE_URL")
 
 def get_db():
     if not DB_URL:
@@ -110,68 +89,59 @@ def log_screening(username, role, target_url, sent_files):
         db.close()
 
 # ─── Demo in‑memory user store ─────────────────────────────────────────────────
-
-# Very simple demo credentials for hackathon use.
-# You can change usernames/passwords/roles here without touching other scripts.
 USERS = {
-    # Worker-level user: can call worker endpoints only
     "worker1": {
         "password": "workerpass",
         "role": "worker",
     },
-    # Government admin: broader access
     "gov_admin": {
         "password": "adminpass",
         "role": "government_admin",
     },
 }
 
-# token -> {"username": ..., "role": ...}
 ACTIVE_TOKENS = {}
 MEM_REPORTS = []
-
 
 def create_token(username: str, role: str) -> str:
     token = uuid.uuid4().hex
     ACTIVE_TOKENS[token] = {"username": username, "role": role}
     return token
 
-
 def get_token_payload(token: str):
     return ACTIVE_TOKENS.get(token)
 
+async def get_current_user(authorization: Optional[str] = Header(None)):
+    if not authorization:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Missing or invalid Authorization header"
+        )
+    parts = authorization.split()
+    if len(parts) != 2 or parts[0].lower() != "bearer":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Missing or invalid Authorization header"
+        )
+    token = parts[1]
+    payload = get_token_payload(token)
+    if not payload:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired token"
+        )
+    return payload
 
 def require_role(*allowed_roles):
-    """
-    Decorator for protecting endpoints by role.
-    Expects an Authorization header:  Authorization: Bearer <token>
-    """
-
-    def decorator(fn):
-        @wraps(fn)
-        def wrapper(*args, **kwargs):
-            auth_header = request.headers.get("Authorization", "")
-            parts = auth_header.split()
-            if len(parts) != 2 or parts[0].lower() != "bearer":
-                return jsonify({"error": "Missing or invalid Authorization header"}), 401
-
-            token = parts[1]
-            payload = get_token_payload(token)
-            if not payload:
-                return jsonify({"error": "Invalid or expired token"}), 401
-
-            role = payload.get("role")
-            if allowed_roles and role not in allowed_roles:
-                return jsonify({"error": "Forbidden: insufficient role", "role": role}), 403
-
-            # Attach user context for downstream if needed
-            request.user = payload  # type: ignore[attr-defined]
-            return fn(*args, **kwargs)
-
-        return wrapper
-
-    return decorator
-
+    async def dependency(current_user: dict = Depends(get_current_user)):
+        role = current_user.get("role")
+        if allowed_roles and role not in allowed_roles:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail={"error": "Forbidden: insufficient role", "role": role}
+            )
+        return current_user
+    return dependency
 
 def ensure_reports_table():
     db = get_db()
@@ -197,8 +167,7 @@ def ensure_reports_table():
     finally:
         db.close()
 
-
-def save_generated_report(username, role, input_payload, result_payload):
+def save_generated_report(username, role, input_payload, result_payload, client_time=None):
     report_id = uuid.uuid4().hex
     report_row = {
         "id": report_id,
@@ -211,7 +180,7 @@ def save_generated_report(username, role, input_payload, result_payload):
 
     db = get_db()
     if not db:
-        report_row["createdAtUtc"] = request.headers.get("X-Client-Time") or ""
+        report_row["createdAtUtc"] = client_time or ""
         MEM_REPORTS.append(report_row)
         return report_row
 
@@ -231,13 +200,12 @@ def save_generated_report(username, role, input_payload, result_payload):
         db.commit()
     except Exception as e:
         print("DB Save Report Error:", e)
-        report_row["createdAtUtc"] = request.headers.get("X-Client-Time") or ""
+        report_row["createdAtUtc"] = client_time or ""
         MEM_REPORTS.append(report_row)
     finally:
         db.close()
 
     return report_row
-
 
 def list_generated_reports(limit=20):
     db = get_db()
@@ -276,202 +244,179 @@ def list_generated_reports(limit=20):
         db.close()
     return out
 
-
-# ─── Auth endpoints ────────────────────────────────────────────────────────────
-
-
-@app.route("/login", methods=["POST"])
-def login():
-    """
-    Generic login endpoint.
-    Body (JSON):
-        { "username": "...", "password": "..." }
-
-    Response:
-        { "token": "<token>", "role": "<role>", "username": "<username>" }
-    """
-
-    data = request.get_json(silent=True) or {}
+@app.post("/login")
+async def login(request: Request):
+    data = await request.get_json() if hasattr(request, 'get_json') else await request.json()
     username = data.get("username", "").strip()
     password = data.get("password", "")
 
     user = get_user_from_db(username)
     if not user or user.get("password") != password:
-        return jsonify({"error": "Invalid credentials"}), 401
+        raise HTTPException(status_code=401, detail="Invalid credentials")
 
     role = user["role"]
     token = create_token(username, role)
-    return jsonify({"token": token, "role": role, "username": username})
+    return {"token": token, "role": role, "username": username}
 
-
-@app.route("/signup", methods=["POST"])
-def signup():
-    """
-    Generic signup endpoint.
-    Body (JSON):
-        { "username": "...", "password": "...", "role": "worker|government_admin" }
-
-    Response:
-        { "token": "<token>", "role": "<role>", "username": "<username>" }
-    """
-
-    data = request.get_json(silent=True) or {}
+@app.post("/signup", status_code=201)
+async def signup(request: Request):
+    data = await request.json()
     username = data.get("username", "").strip()
     password = data.get("password", "")
     role = data.get("role", "worker")
 
     if not username or len(username) < 3:
-        return jsonify({"error": "Username must be at least 3 characters"}), 400
+        raise HTTPException(status_code=400, detail="Username must be at least 3 characters")
     if not password or len(password) < 4:
-        return jsonify({"error": "Password must be at least 4 characters"}), 400
+        raise HTTPException(status_code=400, detail="Password must be at least 4 characters")
     if role not in {"worker", "government_admin"}:
-        return jsonify({"error": "Invalid role"}), 400
+        raise HTTPException(status_code=400, detail="Invalid role")
     if get_user_from_db(username):
-        return jsonify({"error": "Username already exists"}), 409
+        raise HTTPException(status_code=409, detail="Username already exists")
 
     add_user_to_db(username, password, role)
     token = create_token(username, role)
-    return jsonify({"token": token, "role": role, "username": username}), 201
+    return {"token": token, "role": role, "username": username}
 
+@app.get("/whoami")
+async def whoami(current_user: dict = Depends(require_role("worker", "government_admin"))):
+    return {"user": current_user}
 
-@app.route("/whoami", methods=["GET"])
-@require_role("worker", "government_admin")
-def whoami():
-    payload = getattr(request, "user", {})
-    return jsonify({"user": payload})
-
-
-@app.route("/reports", methods=["POST"])
-@require_role("worker", "government_admin")
-def create_report():
+@app.post("/reports", status_code=201)
+async def create_report(
+    request: Request,
+    x_client_time: Optional[str] = Header(None),
+    current_user: dict = Depends(require_role("worker", "government_admin"))
+):
     ensure_reports_table()
-    payload = request.get_json(silent=True) or {}
-    user_payload = getattr(request, "user", {})
+    payload = await request.json()
     row = save_generated_report(
-        user_payload.get("username", "unknown"),
-        user_payload.get("role", "unknown"),
+        current_user.get("username", "unknown"),
+        current_user.get("role", "unknown"),
         payload.get("input"),
         payload.get("result"),
+        client_time=x_client_time
     )
-    return jsonify({"ok": True, "report": row}), 201
+    return {"ok": True, "report": row}
 
-
-@app.route("/admin/reports", methods=["GET"])
-@require_role("government_admin")
-def admin_reports():
+@app.get("/admin/reports")
+async def admin_reports(
+    limit: int = 20,
+    current_user: dict = Depends(require_role("government_admin"))
+):
     ensure_reports_table()
-    try:
-        limit = int(request.args.get("limit", "20"))
-    except Exception:
-        limit = 20
     limit = max(1, min(limit, 100))
-    return jsonify({"reports": list_generated_reports(limit=limit)})
-
-
-# ─── Worker-facing routes (restricted to role=worker) ─────────────────────────
-
+    return {"reports": list_generated_reports(limit=limit)}
 
 MODEL_SERVER_URL = os.environ.get("MODEL_SERVER_URL", "http://127.0.0.1:5000")
 YOLO_SERVER_URL = os.environ.get("YOLO_SERVER_URL", "http://127.0.0.1:5001")
 
-
-def _forward_files(target_url: str, files_keys):
-    """
-    Helper: forward uploaded files to a downstream service.
-    files_keys: iterable of keys to forward (e.g. ["face", "front", "back"])
-    """
+async def _forward_files(
+    request: Request,
+    target_url: str,
+    face: Optional[UploadFile],
+    front: Optional[UploadFile],
+    back: Optional[UploadFile],
+    username: str,
+    role: str
+):
     files = {}
-    for key in files_keys:
-        if key in request.files:
-            f = request.files[key]
-            files[key] = (f.filename, f.stream, f.mimetype or "application/octet-stream")
+    sent_files = []
+    
+    if face:
+        files["face"] = (face.filename, await face.read(), face.content_type)
+        sent_files.append("face")
+    if front:
+        files["front"] = (front.filename, await front.read(), front.content_type)
+        sent_files.append("front")
+    if back:
+        files["back"] = (back.filename, await back.read(), back.content_type)
+        sent_files.append("back")
 
     if not files:
-        return jsonify({"error": "No files provided"}), 400
+        raise HTTPException(status_code=400, detail="No files provided")
+
+    form_data = await request.form()
+    data_payload = {}
+    for k, v in form_data.items():
+        if k not in ["face", "front", "back"]:
+            data_payload[k] = v
 
     try:
-        resp = requests.post(target_url, files=files, timeout=120)
-        user_payload = getattr(request, "user", {})
-        log_screening(
-            user_payload.get("username", "unknown"),
-            user_payload.get("role", "unknown"),
-            target_url, 
-            request.files.keys()
-        )
-        return jsonify(resp.json()), resp.status_code
+        resp = requests.post(target_url, files=files, data=data_payload, timeout=120)
+        log_screening(username, role, target_url, sent_files)
+        return JSONResponse(content=resp.json(), status_code=resp.status_code)
     except requests.RequestException as exc:
-        return jsonify({"error": "Upstream request failed", "details": str(exc)}), 502
+        raise HTTPException(status_code=502, detail={"error": "Upstream request failed", "details": str(exc)})
 
-
-@app.route("/worker/predict", methods=["POST"])
-@require_role("worker")
-def worker_predict():
-    """
-    Worker endpoint that proxies to the existing /predict on the main model server.
-    """
-
+@app.post("/worker/predict")
+async def worker_predict(
+    request: Request,
+    face: Optional[UploadFile] = File(None),
+    front: Optional[UploadFile] = File(None),
+    back: Optional[UploadFile] = File(None),
+    current_user: dict = Depends(require_role("worker"))
+):
     target = f"{MODEL_SERVER_URL.rstrip('/')}/predict"
-    return _forward_files(target, ["face", "front", "back"])
+    return await _forward_files(
+        request, target, face, front, back,
+        current_user.get("username", "unknown"),
+        current_user.get("role", "unknown")
+    )
 
-
-@app.route("/worker/detect", methods=["POST"])
-@require_role("worker")
-def worker_detect():
-    """
-    Worker endpoint that proxies to the existing /detect on the YOLO server
-    (or the combined server if /detect is available on MODEL_SERVER_URL).
-    """
-
-    # Prefer YOLO server if configured, else fall back to model server
+@app.post("/worker/detect")
+async def worker_detect(
+    request: Request,
+    face: Optional[UploadFile] = File(None),
+    front: Optional[UploadFile] = File(None),
+    back: Optional[UploadFile] = File(None),
+    current_user: dict = Depends(require_role("worker"))
+):
     base = YOLO_SERVER_URL or MODEL_SERVER_URL
     target = f"{base.rstrip('/')}/detect"
-    return _forward_files(target, ["face", "front", "back"])
+    return await _forward_files(
+        request, target, face, front, back,
+        current_user.get("username", "unknown"),
+        current_user.get("role", "unknown")
+    )
 
-
-# ─── Government admin routes (restricted to role=government_admin) ────────────
-
-
-@app.route("/admin/detect", methods=["POST"])
-@require_role("government_admin")
-def admin_detect():
-    """
-    Admin variant of detect (currently same behaviour as worker, but
-    separated for future extensions like audit logging, extra metadata, etc.).
-    """
-
+@app.post("/admin/detect")
+async def admin_detect(
+    request: Request,
+    face: Optional[UploadFile] = File(None),
+    front: Optional[UploadFile] = File(None),
+    back: Optional[UploadFile] = File(None),
+    current_user: dict = Depends(require_role("government_admin"))
+):
     base = YOLO_SERVER_URL or MODEL_SERVER_URL
     target = f"{base.rstrip('/')}/detect"
-    return _forward_files(target, ["face", "front", "back"])
+    return await _forward_files(
+        request, target, face, front, back,
+        current_user.get("username", "unknown"),
+        current_user.get("role", "unknown")
+    )
 
-
-@app.route("/admin/health", methods=["GET"])
-@require_role("government_admin")
-def admin_health():
-    """
-    Simple consolidated health endpoint so government admins can check both model servers.
-    """
-
+@app.get("/admin/health")
+async def admin_health(current_user: dict = Depends(require_role("government_admin"))):
     out = {}
     try:
         r1 = requests.get(f"{MODEL_SERVER_URL.rstrip('/')}/health", timeout=5)
         out["model_server"] = {"status_code": r1.status_code, "body": r1.json()}
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         out["model_server"] = {"error": str(exc)}
 
     try:
         r2 = requests.get(f"{YOLO_SERVER_URL.rstrip('/')}/health", timeout=5)
         out["yolo_server"] = {"status_code": r2.status_code, "body": r2.json()}
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         out["yolo_server"] = {"error": str(exc)}
 
-    return jsonify(out)
+    return out
 
-
-@app.route("/health", methods=["GET"])
-def health():
-    return jsonify({"status": "ok", "service": "auth_gateway"})
-
+@app.get("/health")
+async def health():
+    return {"status": "ok", "service": "auth_gateway"}
 
 if __name__ == "__main__":
     port = int(os.environ.get("AUTH_GATEWAY_PORT", "5002"))
-    app.run(host="0.0.0.0", port=port, debug=False)
+    uvicorn.run(app, host="0.0.0.0", port=port)

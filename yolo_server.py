@@ -1,8 +1,10 @@
 import os
 os.environ['CUDA_VISIBLE_DEVICES'] = ''
 
-from flask import Flask, request, jsonify
-from flask_cors import CORS
+from fastapi import FastAPI, File, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
+from typing import Optional
+import uvicorn
 import json, cv2, base64
 import numpy as np
 import torch
@@ -12,8 +14,15 @@ import torchvision.models as tv_models
 from ultralytics import YOLO
 from PIL import Image
 
-app  = Flask(__name__)
-CORS(app)
+app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 DEVICE = 'cpu'
 YOLO_META     = json.load(open('malnutrition_package/metadata.json'))
@@ -95,14 +104,28 @@ def img_to_b64(img_bgr):
     _, buf = cv2.imencode('.jpg', img_bgr, [cv2.IMWRITE_JPEG_QUALITY, 88])
     return base64.b64encode(buf).decode()
 
-@app.route('/detect', methods=['POST'])
-def detect():
+@app.post('/detect')
+async def detect(
+    face: Optional[UploadFile] = File(None),
+    front: Optional[UploadFile] = File(None),
+    back: Optional[UploadFile] = File(None)
+):
     view_results = {}
     all_signs    = []
-    for view in ['face', 'front', 'back']:
-        if view not in request.files:
+    
+    views_files = {
+        'face': face,
+        'front': front,
+        'back': back
+    }
+    
+    for view, file in views_files.items():
+        if file is None:
             continue
-        raw     = request.files[view].read()
+        raw = await file.read()
+        if not raw:
+            continue
+            
         img_bgr = bytes_to_bgr(raw)
         if img_bgr is None:
             continue
@@ -142,19 +165,18 @@ def detect():
             'annotated_image': img_to_b64(annotated)
         }
     condition, severity, sev_color = generate_severity(all_signs)
-    return jsonify({
+    return {
         'condition': condition, 'severity': severity, 'severity_color': sev_color,
         'total_signs': len(all_signs),
         'verified_count': sum(1 for s in all_signs if s['verified']),
         'marasmus_signs': [s['sign'] for s in all_signs if s['sign'] in MARASMUS_SIGNS],
         'kwashiorkor_signs': [s['sign'] for s in all_signs if s['sign'] in KWASHIORKOR_SIGNS],
         'views': view_results
-    })
+    }
 
-@app.route('/health', methods=['GET'])
-def health():
-    return jsonify({'status': 'ok', 'model': 'yolo+resnet18'})
+@app.get('/health')
+async def health():
+    return {'status': 'ok', 'model': 'yolo+resnet18'}
 
 if __name__ == '__main__':
-    # app.run(port=5001, debug=False)
-    app.run(host='0.0.0.0', port=5001, debug=False)
+    uvicorn.run(app, host='0.0.0.0', port=5001)
